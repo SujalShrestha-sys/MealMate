@@ -1,22 +1,27 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Connection URLs are no longer supported in schema files.
+  // Move the DATABASE_URL (and any other datasource URLs) into prisma.config.ts
+  // and configure the PrismaClient with an adapter or accelerateUrl as documented:
+  // https://pris.ly/d/config-datasource
+}
+
+generator client {
+  provider = "prisma-client-js"
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  name String @db.VarChar(191)
-  email String @unique @db.VarChar(191)
-  password String
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  password        String
+  confirmPassword String?
+  role            Role     @default(STUDENT)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum Role {
+  STUDENT
+  TEACHER
 }
