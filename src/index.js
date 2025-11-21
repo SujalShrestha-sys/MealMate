@@ -1,28 +1,38 @@
 import dotenv from "dotenv";
 import express from "express";
 import authRouter from "../routes/authRoutes.js";
-import cors from "cors"
+import cors from "cors";
+import prisma from "../db/dbConfig.js";
 
-//Initialize the .env
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = ["http://localhost:5173"];
-
-//middlewares
-app.use(cors({ origin: allowedOrigins, Credential: true }));
+// Middlewares
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-
-//Routes
+// Routes
 app.use("/api/auth", authRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running at PORT: http://localhost:${PORT}`);
-});
+// Connect to database and start server
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log("Database connected successfully");
+    
+    app.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    process.exit(1);
+  }
+}
+
+startServer();

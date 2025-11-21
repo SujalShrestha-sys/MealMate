@@ -1,35 +1,32 @@
-import express from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import prisma from "../db/dbConfig.js";
 import errorHandling from "../errorHandling.js";
 
-export const RegisterUser = async (req, res, next) => {
+export const RegisterUser = async (req, res) => {
   try {
-    const { name, password, email, confirmPassword, role } = req.body;
+    const { name, password, email, role } = req.body;
 
-    const UserExists = await prisma.user.findFirst({
-      where: {
-        email: email,
-      },
+    // Check if user exists
+    const userExists = await prisma.user.findFirst({
+      where: { email },
     });
 
-    if (UserExists) {
+    if (userExists) {
       return res.status(400).json({
         success: false,
         message: "User already exists!",
       });
     }
 
+    // Hash password and create user
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await prisma.user.create({
       data: {
-        name: name,
-        email: email,
+        name,
+        email,
         password: hashedPassword,
-        confirmPassword : hashedPassword,
-        role: role,
+        role: role || "STUDENT",
       },
     });
 
@@ -42,7 +39,3 @@ export const RegisterUser = async (req, res, next) => {
     errorHandling(err)
   }
 };
-
-const loginUser =  async(req, res) => {
-  
-}
