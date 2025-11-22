@@ -1,8 +1,8 @@
-import bcrypt from "bcrypt";
-import prisma from "../db/dbConfig.js";
-import errorHandling from "../errorHandling.js";
 
-export const RegisterUser = async (req, res) => {
+import prisma from "../db/dbConfig.js";
+import bcrypt from "bcrypt"
+
+export const RegisterUser = async (req, res, next) => {
   try {
     const { name, password, email, role } = req.body;
 
@@ -36,6 +36,6 @@ export const RegisterUser = async (req, res) => {
       data: newUser,
     });
   } catch (err) {
-    errorHandling(err)
+    next(err)
   }
 };
