@@ -9,21 +9,23 @@ datasource db {
 generator client {
   provider = "prisma-client"
   output   = "../src/generated"
-
 }
 
 model User {
-  id              String   @id @default(uuid())
+  id              String  @id @default(uuid())
   name            String
-  email           String   @unique
+  email           String  @unique
   password        String
   confirmPassword String?
-  role            Role     @default(STUDENT)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  role            Role    @default(STUDENT)
+  refreshToken    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
+  ADMIN
   STUDENT
   TEACHER
 }

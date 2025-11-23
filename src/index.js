@@ -6,6 +6,7 @@ import authRouter from "../routes/authRoutes.js";
 import cors from "cors";
 import prisma from "../db/dbConfig.js";
 import errorHandling from "../errorHandling.js";
+import { createAdmin } from "../prisma/seed.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,6 +35,15 @@ async function startServer() {
 
     await prisma.$connect();
     console.log("Database connected successfully");
+
+    /* await createAdmin()
+      .catch((error) => {
+        console.error("Error in seed:", error);
+        process.exit(1);
+      })
+      .finally(async () => {
+        await prisma.$disconnect();
+      }); */
 
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
