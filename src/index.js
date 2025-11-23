@@ -3,20 +3,52 @@ dotenv.config();
 
 import express from "express";
 import authRouter from "../routes/authRoutes.js";
+import chatRouter from "../routes/chatRoutes.js";
 import cors from "cors";
 import prisma from "../db/dbConfig.js";
 import errorHandling from "../errorHandling.js";
 import { createAdmin } from "../prisma/seed.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
+});
+
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
+// Attach io to request
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Socket.io connection handling
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("join_conversation", (conversationId) => {
+    socket.join(conversationId);
+    console.log(`User ${socket.id} joined conversation: ${conversationId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
 // Routes
 app.use("/api/auth", authRouter);
+app.use("/api/chat", chatRouter);
 
 // Global Error Handler
 app.use(errorHandling);
@@ -45,7 +77,7 @@ async function startServer() {
         await prisma.$disconnect();
       }); */
 
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
