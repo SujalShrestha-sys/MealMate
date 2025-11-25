@@ -8,8 +8,14 @@ export const generateToken = (payload) => {
 };
 
 export const verifyToken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET);
+  return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 };
+
+export const verifyRefreshToken = (token) => {
+  return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+};
+
+
 
 // Generate Access Token (short-lived)
 export const generateAccessToken = (user) => {
@@ -45,10 +51,10 @@ export const generateAccessAndRefreshTokens = async (userId) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { refreshToken: refreshToken },
-  });
+  /*   await prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: refreshToken },
+    }); */
 
   return { accessToken, refreshToken };
 };
