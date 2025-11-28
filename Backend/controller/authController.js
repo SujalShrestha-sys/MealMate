@@ -5,6 +5,8 @@ import {
   verifyRefreshToken,
   verifyToken,
 } from "../src/utils/jwt.js";
+import { generateResetToken } from "../src/utils/token.js";
+import crypto from "crypto"
 
 export const RegisterUser = async (req, res, next) => {
   try {
@@ -237,3 +239,118 @@ export const logoutUser = async (req, res) => {
     });
   }
 };
+
+export const ForgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email
+      }
+    })
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found with this email"
+      })
+    }
+
+    //Generate the token
+    const { resetToken, hashedToken } = generateResetToken();
+
+    await prisma.user.update({
+      where: {
+        email
+      },
+      data: {
+        resetToken: hashedToken,
+        resetTokenExpiry: new Date(Date.now() + 15 * 60 * 1000) //15 min expiry
+      }
+    });
+
+    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link generated successfully",
+      resetURL
+    })
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+}
+
+export const ResetPassword = async (req, res) => {
+  try {
+    const resetToken = req.params.token;
+
+    const { password, confirmPassword } = req.body;
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Password and confirm password are required"
+      })
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    //Hash token to compare with DB
+    const hasedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: hasedToken,
+        resetTokenExpiry: { gt: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    const newHashedPassword = await hashedPassword(password);
+
+    await prisma.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        password: newHashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful",
+    });
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
