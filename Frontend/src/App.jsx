@@ -1,7 +1,8 @@
 import "./App.css";
-import { BrowserRouter, Router, Routes, Route } from "react-router-dom"
-import Login from "./component/Login.jsx"
-import SignUp from "./component/SignUp.jsx"
+import { BrowserRouter, Router, Routes, Route } from "react-router-dom";
+import Login from "./component/login.jsx";
+import SignUp from "./component/SignUp.jsx";
+
 function App() {
   return (
     <BrowserRouter>
