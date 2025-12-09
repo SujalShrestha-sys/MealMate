@@ -1,11 +1,11 @@
 import prisma from "../db/dbConfig.js";
-import { comparePassword, hashedPassword } from "../src/utils/bcrypt.js";
+import { comparePassword, hashedPassword } from "../utils/bcrypt.js";
 import {
   generateAccessAndRefreshTokens,
   verifyRefreshToken,
   verifyToken,
-} from "../src/utils/jwt.js";
-import { generateResetToken } from "../src/utils/token.js";
+} from "../utils/jwt.js";
+import { generateResetToken } from "../utils/token.js";
 import crypto from "crypto"
 
 export const RegisterUser = async (req, res, next) => {

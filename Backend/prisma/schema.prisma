@@ -55,3 +55,14 @@ model Message {
   sender   User   @relation("UserMessages", fields: [senderId], references: [id])
   senderId String
 }
+
+model Dish {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  category    String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}

@@ -386,7 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Conversation: 'Conversation',
-  Message: 'Message'
+  Message: 'Message',
+  Dish: 'Dish'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "conversation" | "message"
+    modelProps: "user" | "conversation" | "message" | "dish"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +629,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Dish: {
+      payload: Prisma.$DishPayload<ExtArgs>
+      fields: Prisma.DishFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DishFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DishFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>
+        }
+        findFirst: {
+          args: Prisma.DishFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DishFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>
+        }
+        findMany: {
+          args: Prisma.DishFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>[]
+        }
+        create: {
+          args: Prisma.DishCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>
+        }
+        createMany: {
+          args: Prisma.DishCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DishCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>[]
+        }
+        delete: {
+          args: Prisma.DishDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>
+        }
+        update: {
+          args: Prisma.DishUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>
+        }
+        deleteMany: {
+          args: Prisma.DishDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DishUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DishUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>[]
+        }
+        upsert: {
+          args: Prisma.DishUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DishPayload>
+        }
+        aggregate: {
+          args: Prisma.DishAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDish>
+        }
+        groupBy: {
+          args: Prisma.DishGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DishGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DishCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DishCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -704,6 +779,20 @@ export const MessageScalarFieldEnum = {
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
 
 
+export const DishScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  price: 'price',
+  image: 'image',
+  category: 'category',
+  isAvailable: 'isAvailable',
+  createdAt: 'createdAt'
+} as const
+
+export type DishScalarFieldEnum = (typeof DishScalarFieldEnum)[keyof typeof DishScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -773,6 +862,27 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -871,6 +981,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   conversation?: Prisma.ConversationOmit
   message?: Prisma.MessageOmit
+  dish?: Prisma.DishOmit
 }
 
 /* Types for Logging */
