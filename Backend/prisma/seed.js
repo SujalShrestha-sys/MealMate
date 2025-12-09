@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import prisma from "../db/dbConfig.js";
-import { hashedPassword } from "../src/utils/bcrypt.js";
+import { hashedPassword } from "../utils/bcrypt.js";
 
 export const createAdmin = async () => {
   try {

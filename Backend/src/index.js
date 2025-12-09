@@ -11,6 +11,9 @@ import { createAdmin } from "../prisma/seed.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cookieParser from "cookie-parser";
+import dishesRouter from "../routes/dishesRoutes.js"
+
+
 
 const app = express();
 const httpServer = createServer(app);
@@ -27,6 +30,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static("uploads"));
 
 // Attach io to request
 app.use((req, res, next) => {
@@ -51,6 +55,7 @@ io.on("connection", (socket) => {
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/dishes", dishesRouter);
 
 // Global Error Handler
 app.use(errorHandling);
