@@ -35,7 +35,7 @@ const RolesSection = () => {
     ];
 
     return (
-        <section className="py-24 bg-white" id="roles">
+        <section className="py-8 bg-white" id="roles">
             <div className="container mx-auto px-4 max-w-7xl">
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16">
@@ -54,11 +54,11 @@ const RolesSection = () => {
                             <h3 className="text-2xl font-bold text-slate-900 mb-3">{role.title}</h3>
                             <p className="text-slate-600 leading-relaxed mb-6">{role.description}</p>
 
-                            <ul className="space-y-3 mb-6 flex-grow">
+                            <ul className="space-y-3 mb-6 grow">
                                 {role.features.map((feature, index) => (
                                     <li key={index} className="flex items-center gap-3 text-slate-700">
                                         <span
-                                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                            className="w-1.5 h-1.5 rounded-full shrink-0"
                                             style={{ backgroundColor: role.iconColor }}
                                         ></span>
                                         {feature}
@@ -67,7 +67,7 @@ const RolesSection = () => {
                             </ul>
 
                             <Button variant={role.buttonVariant} size="md" className="w-full mt-auto">
-                                Learn More
+                                Login as {role.title}
                             </Button>
                         </Card>
                     ))}

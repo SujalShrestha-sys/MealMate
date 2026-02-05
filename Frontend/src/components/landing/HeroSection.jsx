@@ -34,7 +34,7 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           {/* LEFT CONTENT */}
-          <div className="space-y-8">
+          <div href='/Home' className="space-y-8">
             <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
               Elevate Your Campus Dining
               <span className="text-green-600">.</span>

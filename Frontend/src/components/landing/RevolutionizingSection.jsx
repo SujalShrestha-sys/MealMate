@@ -1,23 +1,23 @@
-import React from 'react';
-import { CheckCircle, Clock, RefreshCcw } from 'lucide-react';
+import React from "react";
+import { CheckCircle, Clock, RefreshCcw } from "lucide-react";
 
 const features = [
   {
-    title: 'Seamless Experience',
+    title: "Seamless Experience",
     description:
-      'Enjoy smooth, reliable ordering from start to finish with zero friction and zero confusion.',
+      "Enjoy smooth, reliable ordering from start to finish with zero friction and zero confusion.",
     icon: <CheckCircle size={18} className="text-green-600" />,
   },
   {
-    title: 'Time-Optimized Ordering',
+    title: "Time-Optimized Ordering",
     description:
-      'Pre-order meals, skip long queues, and pick up your food exactly when it suits you.',
+      "Pre-order meals, skip long queues, and pick up your food exactly when it suits you.",
     icon: <Clock size={18} className="text-green-600" />,
   },
   {
-    title: 'Hassle-Free Refunds',
+    title: "Hassle-Free Refunds",
     description:
-      'Changed your plans? Get instant refunds with a single tap — fast and stress-free.',
+      "Changed your plans? Get instant refunds with a single tap — fast and stress-free.",
     icon: <RefreshCcw size={18} className="text-green-600" />,
   },
 ];
@@ -27,7 +27,6 @@ const RevolutionizingSection = () => {
     <section className="py-24">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-
           {/* LEFT – IMAGE */}
           <div className="relative flex justify-center">
             <div className="relative shadow-xl rounded-xl">
@@ -50,9 +49,17 @@ const RevolutionizingSection = () => {
               </h2>
               <p className="mt-4 text-lg text-slate-600 max-w-xl leading-relaxed">
                 Built with a mission of
-                <span className="font-semibold text-slate-800"> zero food waste</span> and
-                <span className="font-semibold text-slate-800"> zero queues</span>,
-                MealMate simplifies campus dining for students and staff alike.
+                <span className="font-semibold text-slate-800">
+                  {" "}
+                  zero food waste
+                </span>{" "}
+                and
+                <span className="font-semibold text-slate-800">
+                  {" "}
+                  zero queues
+                </span>
+                , MealMate simplifies campus dining for students and staff
+                alike.
               </p>
             </div>
 
@@ -79,7 +86,6 @@ const RevolutionizingSection = () => {
               ))}
             </div>
           </div>
-
         </div>
       </div>
     </section>

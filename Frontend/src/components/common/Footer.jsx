@@ -3,7 +3,7 @@ import { Facebook, Twitter, Instagram, Linkedin, Mail, UtensilsCrossed } from 'l
 
 const Footer = () => {
     return (
-        <footer className="bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white py-16 mt-24" id="footer">
+        <footer className="bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white py-16 mt-12" id="footer">
             <div className="container mx-auto px-4 max-w-7xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                     {/* Company Info */}
@@ -65,11 +65,11 @@ const Footer = () => {
                         <ul className="space-y-3 text-green-50">
                             <li className="flex items-center gap-2">
                                 <Mail size={16} />
-                                support@mealmate.com
+                                Support@mealmate.com
                             </li>
-                            <li>+1 (555) 123-4567</li>
-                            <li>123 Campus Drive</li>
-                            <li>University City, ST 12345</li>
+                            <li>+977 9800925222</li>
+                            <li>Dharan, Sunsari</li>
+                            <li>Nepal</li>
                         </ul>
                     </div>
                 </div>
