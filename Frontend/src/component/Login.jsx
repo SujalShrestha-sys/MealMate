@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Hamburger } from 'lucide-react';
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 
 const Login = () => {
@@ -9,9 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigate = useNavigate();
-
-  return (
+  return (      
     <div className="flex w-full min-h-screen bg-gray-50">
 
       {/* LEFT SIDE: Image & Branding (Hidden on mobile, visible on medium screens and up) */}
