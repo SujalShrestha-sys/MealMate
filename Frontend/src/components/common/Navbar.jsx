@@ -25,7 +25,7 @@ const Navbar = ({ isLoggedIn = true }) => {
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
 
         {/* Logo */}
-        <a href="/Home" className="flex items-center gap-2 font-bold text-xl">
+        <a href="#" className="flex items-center gap-2 font-bold text-xl">
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-600 text-white">
             <UtensilsCrossed size={20} />
           </div>
@@ -37,7 +37,7 @@ const Navbar = ({ isLoggedIn = true }) => {
           {links.map(link => (
             <a
               key={link}
-              href={`/${link}`}
+              href={`#${link.toLowerCase()}`}
               className="text-slate-700 hover:text-green-600 transition"
             >
               {link}
