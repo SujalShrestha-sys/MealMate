@@ -1,5 +1,5 @@
 const errorHandling = (err, req, res, next) => {
-  console.log(err.stack);
+  console.error("Error:", err);
   return res.status(500).json({
     success: false,
     message: "An unexpected error occured!",

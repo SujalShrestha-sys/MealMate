@@ -1,47 +1,230 @@
 datasource db {
   provider = "postgresql"
-  // Connection URLs are no longer supported in schema files.
-  // Move the DATABASE_URL (and any other datasource URLs) into prisma.config.ts
-  // and configure the PrismaClient with an adapter or accelerateUrl as documented:
-  // https://pris.ly/d/config-datasource
 }
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated"
+  output   = "../generated/prisma"
 }
 
 model User {
-  id               String    @id @default(uuid())
-  name             String
-  email            String    @unique
-  password         String
-  confirmPassword  String?
-  role             Role      @default(STUDENT)
-  refreshToken     String?
-  resetToken       String?   @unique
-  resetTokenExpiry DateTime?
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  conversations Conversation[] @relation("UserConversations")
-  messages      Message[]      @relation("UserMessages")
+  // Relations
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
+
+  refreshTokens RefreshToken[]
+  resetTokens   PasswordResetToken[]
+  cart          Cart?
+  orders        Order[]
+  feedbacks     Feedback[]
+  notifications Notification[]
+  subscriptions UserSubscription[]
+  messages      Message[]
 }
 
-enum Role {
-  ADMIN
-  STUDENT
-  TEACHER
+model Role {
+  id   String @id @default(uuid())
+  name String @unique
+
+  users User[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Cart {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  items CartItem[]
+}
+
+model CartItem {
+  id       String @id @default(uuid())
+  quantity Int
+
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id])
+
+  dishId String
+  dish   Dish   @relation(fields: [dishId], references: [id])
+}
+
+model Dish {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  isAvailable Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  feedbacks   Feedback[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  ingredients DishIngredient[]
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  dishId String
+  dish   Dish   @relation(fields: [dishId], references: [id])
+}
+
+model DishIngredient {
+  id String @id @default(uuid())
+
+  dishId String
+  dish   Dish   @relation(fields: [dishId], references: [id])
+
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  quantityRequired Float
+}
+
+model InventoryItem {
+  id                String @id @default(uuid())
+  name              String
+  unit              String
+  lowStockThreshold Int
+
+  dishes DishIngredient[]
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  totalAmount Float
+  status      String
+  createdAt   DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  pickupSlotId String
+  pickupSlot   PickupSlot @relation(fields: [pickupSlotId], references: [id])
+
+  items   OrderItem[]
+  payment Payment?
+}
+
+model OrderItem {
+  id              String @id @default(uuid())
+  quantity        Int
+  priceAtPurchase Float
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  dishId String
+  dish   Dish   @relation(fields: [dishId], references: [id])
+}
+
+model PickupSlot {
+  id        String   @id @default(uuid())
+  startTime DateTime
+  endTime   DateTime
+  maxOrders Int
+
+  orders Order[]
+}
+
+model Payment {
+  id                   String   @id @default(uuid())
+  provider             String
+  amount               Float
+  status               String
+  transactionReference String
+  paidAt               DateTime
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model SubscriptionPlan {
+  id           String @id @default(uuid())
+  name         String
+  price        Float
+  durationDays Int
+
+  users UserSubscription[]
+}
+
+model UserSubscription {
+  id        String   @id @default(uuid())
+  startDate DateTime
+  endDate   DateTime
+  status    String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  planId String
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id])
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String
+
+  dishes Dish[]
 }
 
 model Conversation {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  participants User[]    @relation("UserConversations")
-  messages     Message[]
+  messages Message[]
 }
 
 model Message {
@@ -49,20 +232,9 @@ model Message {
   content   String
   createdAt DateTime @default(now())
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
   conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 
-  sender   User   @relation("UserMessages", fields: [senderId], references: [id])
   senderId String
-}
-
-model Dish {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Float
-  image       String?
-  category    String
-  isAvailable Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  sender   User   @relation(fields: [senderId], references: [id])
 }

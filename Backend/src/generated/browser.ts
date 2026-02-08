@@ -23,6 +23,91 @@ export * from './enums.ts';
  */
 export type User = Prisma.UserModel
 /**
+ * Model Role
+ * 
+ */
+export type Role = Prisma.RoleModel
+/**
+ * Model RefreshToken
+ * 
+ */
+export type RefreshToken = Prisma.RefreshTokenModel
+/**
+ * Model PasswordResetToken
+ * 
+ */
+export type PasswordResetToken = Prisma.PasswordResetTokenModel
+/**
+ * Model Cart
+ * 
+ */
+export type Cart = Prisma.CartModel
+/**
+ * Model CartItem
+ * 
+ */
+export type CartItem = Prisma.CartItemModel
+/**
+ * Model Dish
+ * 
+ */
+export type Dish = Prisma.DishModel
+/**
+ * Model Feedback
+ * 
+ */
+export type Feedback = Prisma.FeedbackModel
+/**
+ * Model DishIngredient
+ * 
+ */
+export type DishIngredient = Prisma.DishIngredientModel
+/**
+ * Model InventoryItem
+ * 
+ */
+export type InventoryItem = Prisma.InventoryItemModel
+/**
+ * Model Order
+ * 
+ */
+export type Order = Prisma.OrderModel
+/**
+ * Model OrderItem
+ * 
+ */
+export type OrderItem = Prisma.OrderItemModel
+/**
+ * Model PickupSlot
+ * 
+ */
+export type PickupSlot = Prisma.PickupSlotModel
+/**
+ * Model Payment
+ * 
+ */
+export type Payment = Prisma.PaymentModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
+ * Model SubscriptionPlan
+ * 
+ */
+export type SubscriptionPlan = Prisma.SubscriptionPlanModel
+/**
+ * Model UserSubscription
+ * 
+ */
+export type UserSubscription = Prisma.UserSubscriptionModel
+/**
+ * Model Category
+ * 
+ */
+export type Category = Prisma.CategoryModel
+/**
  * Model Conversation
  * 
  */
@@ -32,8 +117,3 @@ export type Conversation = Prisma.ConversationModel
  * 
  */
 export type Message = Prisma.MessageModel
-/**
- * Model Dish
- * 
- */
-export type Dish = Prisma.DishModel

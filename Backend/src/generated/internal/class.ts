@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.0.0",
   "engineVersion": "0c19ccc313cf9911a90d99d2ac2eb0280c76c513",
   "activeProvider": "postgresql",
-  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  // Connection URLs are no longer supported in schema files.\n  // Move the DATABASE_URL (and any other datasource URLs) into prisma.config.ts\n  // and configure the PrismaClient with an adapter or accelerateUrl as documented:\n  // https://pris.ly/d/config-datasource\n}\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated\"\n}\n\nmodel User {\n  id               String    @id @default(uuid())\n  name             String\n  email            String    @unique\n  password         String\n  confirmPassword  String?\n  role             Role      @default(STUDENT)\n  refreshToken     String?\n  resetToken       String?   @unique\n  resetTokenExpiry DateTime?\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  conversations Conversation[] @relation(\"UserConversations\")\n  messages      Message[]      @relation(\"UserMessages\")\n}\n\nenum Role {\n  ADMIN\n  STUDENT\n  TEACHER\n}\n\nmodel Conversation {\n  id        String   @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  participants User[]    @relation(\"UserConversations\")\n  messages     Message[]\n}\n\nmodel Message {\n  id        String   @id @default(uuid())\n  content   String\n  createdAt DateTime @default(now())\n\n  conversation   Conversation @relation(fields: [conversationId], references: [id])\n  conversationId String\n\n  sender   User   @relation(\"UserMessages\", fields: [senderId], references: [id])\n  senderId String\n}\n\nmodel Dish {\n  id          String   @id @default(uuid())\n  name        String\n  description String?\n  price       Float\n  image       String?\n  category    String\n  isAvailable Boolean  @default(true)\n  createdAt   DateTime @default(now())\n}\n",
+  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  // Connection URLs are no longer supported in schema files.\n  // Move the DATABASE_URL (and any other datasource URLs) into prisma.config.ts\n  // and configure the PrismaClient with an adapter or accelerateUrl as documented:\n  // https://pris.ly/d/config-datasource\n}\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated\"\n}\n\nmodel User {\n  id       String @id @default(uuid())\n  name     String\n  email    String @unique\n  password String\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // Relations\n  roleId String?\n  role   Role?   @relation(fields: [roleId], references: [id])\n\n  refreshTokens RefreshToken[]\n  resetTokens   PasswordResetToken[]\n  cart          Cart?\n  orders        Order[]\n  feedbacks     Feedback[]\n  notifications Notification[]\n  subscriptions UserSubscription[]\n  messages      Message[]\n}\n\nmodel Role {\n  id   String @id @default(uuid())\n  name String @unique\n\n  users User[]\n}\n\nmodel RefreshToken {\n  id        String   @id @default(uuid())\n  token     String\n  createdAt DateTime @default(now())\n  expiresAt DateTime\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id])\n}\n\nmodel PasswordResetToken {\n  id        String   @id @default(uuid())\n  token     String\n  expiresAt DateTime\n  createdAt DateTime @default(now())\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id])\n}\n\nmodel Cart {\n  id String @id @default(uuid())\n\n  userId String @unique\n  user   User   @relation(fields: [userId], references: [id])\n\n  items CartItem[]\n}\n\nmodel CartItem {\n  id       String @id @default(uuid())\n  quantity Int\n\n  cartId String\n  cart   Cart   @relation(fields: [cartId], references: [id])\n\n  dishId String\n  dish   Dish   @relation(fields: [dishId], references: [id])\n}\n\nmodel Dish {\n  id          String  @id @default(uuid())\n  name        String\n  description String?\n  price       Float\n  imageUrl    String?\n  isAvailable Boolean @default(true)\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  categoryId String\n  category   Category @relation(fields: [categoryId], references: [id])\n\n  feedbacks   Feedback[]\n  cartItems   CartItem[]\n  orderItems  OrderItem[]\n  ingredients DishIngredient[]\n}\n\nmodel Feedback {\n  id        String   @id @default(uuid())\n  rating    Int\n  comment   String?\n  createdAt DateTime @default(now())\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id])\n\n  dishId String\n  dish   Dish   @relation(fields: [dishId], references: [id])\n}\n\nmodel DishIngredient {\n  id String @id @default(uuid())\n\n  dishId String\n  dish   Dish   @relation(fields: [dishId], references: [id])\n\n  inventoryItemId String\n  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])\n\n  quantityRequired Float\n}\n\nmodel InventoryItem {\n  id                String @id @default(uuid())\n  name              String\n  unit              String\n  lowStockThreshold Int\n\n  dishes DishIngredient[]\n}\n\nmodel Order {\n  id          String   @id @default(uuid())\n  totalAmount Float\n  status      String\n  createdAt   DateTime @default(now())\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id])\n\n  pickupSlotId String\n  pickupSlot   PickupSlot @relation(fields: [pickupSlotId], references: [id])\n\n  items   OrderItem[]\n  payment Payment?\n}\n\nmodel OrderItem {\n  id              String @id @default(uuid())\n  quantity        Int\n  priceAtPurchase Float\n\n  orderId String\n  order   Order  @relation(fields: [orderId], references: [id])\n\n  dishId String\n  dish   Dish   @relation(fields: [dishId], references: [id])\n}\n\nmodel PickupSlot {\n  id        String   @id @default(uuid())\n  startTime DateTime\n  endTime   DateTime\n  maxOrders Int\n\n  orders Order[]\n}\n\nmodel Payment {\n  id                   String   @id @default(uuid())\n  provider             String\n  amount               Float\n  status               String\n  transactionReference String\n  paidAt               DateTime\n\n  orderId String @unique\n  order   Order  @relation(fields: [orderId], references: [id])\n}\n\nmodel Notification {\n  id        String   @id @default(uuid())\n  title     String\n  message   String\n  isRead    Boolean  @default(false)\n  createdAt DateTime @default(now())\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id])\n}\n\nmodel SubscriptionPlan {\n  id           String @id @default(uuid())\n  name         String\n  price        Float\n  durationDays Int\n\n  users UserSubscription[]\n}\n\nmodel UserSubscription {\n  id        String   @id @default(uuid())\n  startDate DateTime\n  endDate   DateTime\n  status    String\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id])\n\n  planId String\n  plan   SubscriptionPlan @relation(fields: [planId], references: [id])\n}\n\nmodel Category {\n  id   String @id @default(uuid())\n  name String\n\n  dishes Dish[]\n}\n\nmodel Conversation {\n  id        String   @id @default(uuid())\n  createdAt DateTime @default(now())\n\n  messages Message[]\n}\n\nmodel Message {\n  id        String   @id @default(uuid())\n  content   String\n  createdAt DateTime @default(now())\n\n  conversationId String\n  conversation   Conversation @relation(fields: [conversationId], references: [id])\n\n  senderId String\n  sender   User   @relation(fields: [senderId], references: [id])\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -28,7 +28,7 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"confirmPassword\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"refreshToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"resetToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"resetTokenExpiry\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"conversations\",\"kind\":\"object\",\"type\":\"Conversation\",\"relationName\":\"UserConversations\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"Message\",\"relationName\":\"UserMessages\"}],\"dbName\":null},\"Conversation\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"participants\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserConversations\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"Message\",\"relationName\":\"ConversationToMessage\"}],\"dbName\":null},\"Message\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"conversation\",\"kind\":\"object\",\"type\":\"Conversation\",\"relationName\":\"ConversationToMessage\"},{\"name\":\"conversationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sender\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserMessages\"},{\"name\":\"senderId\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"Dish\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"image\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isAvailable\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"roleId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"object\",\"type\":\"Role\",\"relationName\":\"RoleToUser\"},{\"name\":\"refreshTokens\",\"kind\":\"object\",\"type\":\"RefreshToken\",\"relationName\":\"RefreshTokenToUser\"},{\"name\":\"resetTokens\",\"kind\":\"object\",\"type\":\"PasswordResetToken\",\"relationName\":\"PasswordResetTokenToUser\"},{\"name\":\"cart\",\"kind\":\"object\",\"type\":\"Cart\",\"relationName\":\"CartToUser\"},{\"name\":\"orders\",\"kind\":\"object\",\"type\":\"Order\",\"relationName\":\"OrderToUser\"},{\"name\":\"feedbacks\",\"kind\":\"object\",\"type\":\"Feedback\",\"relationName\":\"FeedbackToUser\"},{\"name\":\"notifications\",\"kind\":\"object\",\"type\":\"Notification\",\"relationName\":\"NotificationToUser\"},{\"name\":\"subscriptions\",\"kind\":\"object\",\"type\":\"UserSubscription\",\"relationName\":\"UserToUserSubscription\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"Message\",\"relationName\":\"MessageToUser\"}],\"dbName\":null},\"Role\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"RoleToUser\"}],\"dbName\":null},\"RefreshToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"RefreshTokenToUser\"}],\"dbName\":null},\"PasswordResetToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"PasswordResetTokenToUser\"}],\"dbName\":null},\"Cart\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"CartToUser\"},{\"name\":\"items\",\"kind\":\"object\",\"type\":\"CartItem\",\"relationName\":\"CartToCartItem\"}],\"dbName\":null},\"CartItem\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cartId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cart\",\"kind\":\"object\",\"type\":\"Cart\",\"relationName\":\"CartToCartItem\"},{\"name\":\"dishId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dish\",\"kind\":\"object\",\"type\":\"Dish\",\"relationName\":\"CartItemToDish\"}],\"dbName\":null},\"Dish\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isAvailable\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"categoryId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"object\",\"type\":\"Category\",\"relationName\":\"CategoryToDish\"},{\"name\":\"feedbacks\",\"kind\":\"object\",\"type\":\"Feedback\",\"relationName\":\"DishToFeedback\"},{\"name\":\"cartItems\",\"kind\":\"object\",\"type\":\"CartItem\",\"relationName\":\"CartItemToDish\"},{\"name\":\"orderItems\",\"kind\":\"object\",\"type\":\"OrderItem\",\"relationName\":\"DishToOrderItem\"},{\"name\":\"ingredients\",\"kind\":\"object\",\"type\":\"DishIngredient\",\"relationName\":\"DishToDishIngredient\"}],\"dbName\":null},\"Feedback\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"rating\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"comment\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"FeedbackToUser\"},{\"name\":\"dishId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dish\",\"kind\":\"object\",\"type\":\"Dish\",\"relationName\":\"DishToFeedback\"}],\"dbName\":null},\"DishIngredient\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dishId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dish\",\"kind\":\"object\",\"type\":\"Dish\",\"relationName\":\"DishToDishIngredient\"},{\"name\":\"inventoryItemId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"inventoryItem\",\"kind\":\"object\",\"type\":\"InventoryItem\",\"relationName\":\"DishIngredientToInventoryItem\"},{\"name\":\"quantityRequired\",\"kind\":\"scalar\",\"type\":\"Float\"}],\"dbName\":null},\"InventoryItem\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"unit\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lowStockThreshold\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"dishes\",\"kind\":\"object\",\"type\":\"DishIngredient\",\"relationName\":\"DishIngredientToInventoryItem\"}],\"dbName\":null},\"Order\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"totalAmount\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"OrderToUser\"},{\"name\":\"pickupSlotId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pickupSlot\",\"kind\":\"object\",\"type\":\"PickupSlot\",\"relationName\":\"OrderToPickupSlot\"},{\"name\":\"items\",\"kind\":\"object\",\"type\":\"OrderItem\",\"relationName\":\"OrderToOrderItem\"},{\"name\":\"payment\",\"kind\":\"object\",\"type\":\"Payment\",\"relationName\":\"OrderToPayment\"}],\"dbName\":null},\"OrderItem\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"priceAtPurchase\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"orderId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"order\",\"kind\":\"object\",\"type\":\"Order\",\"relationName\":\"OrderToOrderItem\"},{\"name\":\"dishId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dish\",\"kind\":\"object\",\"type\":\"Dish\",\"relationName\":\"DishToOrderItem\"}],\"dbName\":null},\"PickupSlot\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startTime\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"endTime\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"maxOrders\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"orders\",\"kind\":\"object\",\"type\":\"Order\",\"relationName\":\"OrderToPickupSlot\"}],\"dbName\":null},\"Payment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"transactionReference\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"paidAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"orderId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"order\",\"kind\":\"object\",\"type\":\"Order\",\"relationName\":\"OrderToPayment\"}],\"dbName\":null},\"Notification\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"message\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isRead\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"NotificationToUser\"}],\"dbName\":null},\"SubscriptionPlan\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"durationDays\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"UserSubscription\",\"relationName\":\"SubscriptionPlanToUserSubscription\"}],\"dbName\":null},\"UserSubscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startDate\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"endDate\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserSubscription\"},{\"name\":\"planId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"plan\",\"kind\":\"object\",\"type\":\"SubscriptionPlan\",\"relationName\":\"SubscriptionPlanToUserSubscription\"}],\"dbName\":null},\"Category\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dishes\",\"kind\":\"object\",\"type\":\"Dish\",\"relationName\":\"CategoryToDish\"}],\"dbName\":null},\"Conversation\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"Message\",\"relationName\":\"ConversationToMessage\"}],\"dbName\":null},\"Message\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"conversationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"conversation\",\"kind\":\"object\",\"type\":\"Conversation\",\"relationName\":\"ConversationToMessage\"},{\"name\":\"senderId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sender\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"MessageToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -185,6 +185,176 @@ export interface PrismaClient<
   get user(): Prisma.UserDelegate<ExtArgs, { omit: OmitOpts }>;
 
   /**
+   * `prisma.role`: Exposes CRUD operations for the **Role** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Roles
+    * const roles = await prisma.role.findMany()
+    * ```
+    */
+  get role(): Prisma.RoleDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.refreshToken`: Exposes CRUD operations for the **RefreshToken** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RefreshTokens
+    * const refreshTokens = await prisma.refreshToken.findMany()
+    * ```
+    */
+  get refreshToken(): Prisma.RefreshTokenDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.passwordResetToken`: Exposes CRUD operations for the **PasswordResetToken** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PasswordResetTokens
+    * const passwordResetTokens = await prisma.passwordResetToken.findMany()
+    * ```
+    */
+  get passwordResetToken(): Prisma.PasswordResetTokenDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.cart`: Exposes CRUD operations for the **Cart** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Carts
+    * const carts = await prisma.cart.findMany()
+    * ```
+    */
+  get cart(): Prisma.CartDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.cartItem`: Exposes CRUD operations for the **CartItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CartItems
+    * const cartItems = await prisma.cartItem.findMany()
+    * ```
+    */
+  get cartItem(): Prisma.CartItemDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.dish`: Exposes CRUD operations for the **Dish** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Dishes
+    * const dishes = await prisma.dish.findMany()
+    * ```
+    */
+  get dish(): Prisma.DishDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.feedback`: Exposes CRUD operations for the **Feedback** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Feedbacks
+    * const feedbacks = await prisma.feedback.findMany()
+    * ```
+    */
+  get feedback(): Prisma.FeedbackDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.dishIngredient`: Exposes CRUD operations for the **DishIngredient** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DishIngredients
+    * const dishIngredients = await prisma.dishIngredient.findMany()
+    * ```
+    */
+  get dishIngredient(): Prisma.DishIngredientDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.inventoryItem`: Exposes CRUD operations for the **InventoryItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more InventoryItems
+    * const inventoryItems = await prisma.inventoryItem.findMany()
+    * ```
+    */
+  get inventoryItem(): Prisma.InventoryItemDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.order`: Exposes CRUD operations for the **Order** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Orders
+    * const orders = await prisma.order.findMany()
+    * ```
+    */
+  get order(): Prisma.OrderDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.orderItem`: Exposes CRUD operations for the **OrderItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OrderItems
+    * const orderItems = await prisma.orderItem.findMany()
+    * ```
+    */
+  get orderItem(): Prisma.OrderItemDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.pickupSlot`: Exposes CRUD operations for the **PickupSlot** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PickupSlots
+    * const pickupSlots = await prisma.pickupSlot.findMany()
+    * ```
+    */
+  get pickupSlot(): Prisma.PickupSlotDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.payment`: Exposes CRUD operations for the **Payment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Payments
+    * const payments = await prisma.payment.findMany()
+    * ```
+    */
+  get payment(): Prisma.PaymentDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.notification`: Exposes CRUD operations for the **Notification** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Notifications
+    * const notifications = await prisma.notification.findMany()
+    * ```
+    */
+  get notification(): Prisma.NotificationDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.subscriptionPlan`: Exposes CRUD operations for the **SubscriptionPlan** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SubscriptionPlans
+    * const subscriptionPlans = await prisma.subscriptionPlan.findMany()
+    * ```
+    */
+  get subscriptionPlan(): Prisma.SubscriptionPlanDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.userSubscription`: Exposes CRUD operations for the **UserSubscription** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserSubscriptions
+    * const userSubscriptions = await prisma.userSubscription.findMany()
+    * ```
+    */
+  get userSubscription(): Prisma.UserSubscriptionDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.category`: Exposes CRUD operations for the **Category** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Categories
+    * const categories = await prisma.category.findMany()
+    * ```
+    */
+  get category(): Prisma.CategoryDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
    * `prisma.conversation`: Exposes CRUD operations for the **Conversation** model.
     * Example usage:
     * ```ts
@@ -203,16 +373,6 @@ export interface PrismaClient<
     * ```
     */
   get message(): Prisma.MessageDelegate<ExtArgs, { omit: OmitOpts }>;
-
-  /**
-   * `prisma.dish`: Exposes CRUD operations for the **Dish** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more Dishes
-    * const dishes = await prisma.dish.findMany()
-    * ```
-    */
-  get dish(): Prisma.DishDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

@@ -3,44 +3,32 @@ import { comparePassword, hashedPassword } from "../utils/bcrypt.js";
 import {
   generateAccessAndRefreshTokens,
   verifyRefreshToken,
-  verifyToken,
 } from "../utils/jwt.js";
 import { generateResetToken } from "../utils/token.js";
-import crypto from "crypto"
+import crypto from "crypto";
 
-export const RegisterUser = async (req, res, next) => {
+export const RegisterUser = async (req, res) => {
   try {
-    const { name, password, confirmPassword, email } = req.body;
+    const { name, email, password } = req.body;
 
-    // Validate required fields
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required!",
+        message: "All fields are required",
       });
     }
 
-    // Verify password and confirmPassword match
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Password and confirm password do not match!",
-      });
-    }
-
-    // Check if user exists
-    const userExists = await prisma.user.findUnique({
+    const emailExists = await prisma.user.findFirst({
       where: { email },
     });
 
-    if (userExists) {
+    if (emailExists) {
       return res.status(400).json({
         success: false,
-        message: "User already exists!",
+        message: "User already exists",
       });
     }
 
-    // Hash password and create user
     const hashedPass = await hashedPassword(password);
 
     const newUser = await prisma.user.create({
@@ -48,18 +36,24 @@ export const RegisterUser = async (req, res, next) => {
         name,
         email,
         password: hashedPass,
-        role: "STUDENT",
+        role: {
+          connect: { name: "STUDENT" },
+        },
       },
     });
 
     return res.status(201).json({
       success: true,
-      message: "Registered Successfully",
+      message: "Registered successfully",
       data: newUser,
     });
-  } catch (err) {
-    next(err);
-  }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  } 
 };
 
 export const LoginUser = async (req, res) => {
@@ -80,7 +74,6 @@ export const LoginUser = async (req, res) => {
     // Find user by email
     const user = await prisma.user.findUnique({ where: { email } });
 
-    // Check if user exists, role matches, AND name matches
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -97,46 +90,25 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-      user.id
-    );
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
 
-    console.log(accessToken);
-    console.log(refreshToken);
+    console.log("Access Token:", accessToken);
+    console.log("Refresh Token:", refreshToken);
 
-    //save refresh token to DB
-    await prisma.user.update({
-      where: {
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      user: {
         id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role?.name || null,
       },
-      data: {
-        refreshToken: refreshToken
-      }
-    })
-
-
-    const options = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    };
-
-    return res
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .status(200)
-      .json({
-        success: true,
-        message: "User logged in successfully",
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        },
+      tokens: {
         accessToken,
         refreshToken,
-      });
+      },
+    });
   } catch (err) {
     console.log(err.message);
     return res.status(500).json({
@@ -147,16 +119,16 @@ export const LoginUser = async (req, res) => {
 };
 
 export const RefreshAccessToken = async (req, res) => {
-  const incommingToken = req.cookies?.refreshToken || req.body?.refreshToken;
-
-  if (!incommingToken) {
-    return res.status(401).json({
-      success: false,
-      message: "Refresh token missing",
-    });
-  }
-
   try {
+    const incommingToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (!incommingToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token missing",
+      });
+    }
+
     const decoded = verifyRefreshToken(incommingToken);
 
     const user = await prisma.user.findUnique({
@@ -175,27 +147,17 @@ export const RefreshAccessToken = async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-      user.id
+      user.id,
     );
 
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken }
+    return res.status(200).json({
+      success: true,
+      message: "Access token refreshed",
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
     });
-
-    return res
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .status(200)
-      .json({
-        success: true,
-        message: "Access token refreshed",
-      });
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -208,31 +170,29 @@ export const logoutUser = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        refreshToken: null,
-      }
+    // Find how many refresh tokens the user currently has
+    const tokenCount = await prisma.refreshToken.count({
+      where: { userId },
     });
-    const options = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    };
 
-    return res
-      .clearCookie("accessToken", options)
-      .clearCookie("refreshToken", options)
-      .clearCookie("refreshToken", options)
-      .status(200)
-      .json({
-        success: true,
-        message: "User logged out successfully",
+    if (tokenCount === 0) {
+      // No tokens found — user is already logged out
+      return res.status(400).json({
+        success: false,
+        message: "User already logged out",
       });
+    }
+
+    await prisma.refreshToken.deleteMany({
+      where: { userId },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     return res.status(500).json({
       success: false,
       message: "Something went wrong" || error.message,
@@ -247,21 +207,21 @@ export const ForgetPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: "Email is required"
-      })
+        message: "Email is required",
+      });
     }
 
     const user = await prisma.user.findUnique({
       where: {
-        email: email
-      }
-    })
+        email: email,
+      },
+    });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found with this email"
-      })
+        message: "User not found with this email",
+      });
     }
 
     //Generate the token
@@ -269,12 +229,12 @@ export const ForgetPassword = async (req, res) => {
 
     await prisma.user.update({
       where: {
-        email
+        email,
       },
       data: {
         resetToken: hashedToken,
-        resetTokenExpiry: new Date(Date.now() + 15 * 60 * 1000) //15 min expiry
-      }
+        resetTokenExpiry: new Date(Date.now() + 15 * 60 * 1000), //15 min expiry
+      },
     });
 
     const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
@@ -282,17 +242,16 @@ export const ForgetPassword = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Password reset link generated successfully",
-      resetURL
-    })
-
+      resetURL,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
-}
+};
 
 export const ResetPassword = async (req, res) => {
   try {
@@ -303,8 +262,8 @@ export const ResetPassword = async (req, res) => {
     if (!password || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Password and confirm password are required"
-      })
+        message: "Password and confirm password are required",
+      });
     }
 
     if (password !== confirmPassword) {
@@ -315,13 +274,16 @@ export const ResetPassword = async (req, res) => {
     }
 
     //Hash token to compare with DB
-    const hasedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const hasedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
 
     const user = await prisma.user.findFirst({
       where: {
         resetToken: hasedToken,
-        resetTokenExpiry: { gt: new Date() }
-      }
+        resetTokenExpiry: { gt: new Date() },
+      },
     });
 
     if (!user) {
@@ -335,22 +297,21 @@ export const ResetPassword = async (req, res) => {
 
     await prisma.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
         password: newHashedPassword,
         resetToken: null,
-        resetTokenExpiry: null
-      }
-    })
+        resetTokenExpiry: null,
+      },
+    });
 
     return res.status(200).json({
       success: true,
       message: "Password reset successful",
     });
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({ success: false, message: error.message });
   }
-}
+};

@@ -1,11 +1,8 @@
 import jwt from "jsonwebtoken";
-import prisma from "../db/dbConfig.js"
+import prisma from "../db/dbConfig.js";
 import dotenv from "dotenv";
+import { addMinutes } from "date-fns";
 dotenv.config();
-
-export const generateToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
-};
 
 export const verifyToken = (token) => {
   return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -15,18 +12,16 @@ export const verifyRefreshToken = (token) => {
   return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
 };
 
-
-
 // Generate Access Token (short-lived)
 export const generateAccessToken = (user) => {
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role?.name || null,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: "15m" },
   );
 };
 
@@ -37,12 +32,15 @@ export const generateRefreshToken = (user) => {
       id: user.id,
     },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "7d" },
   );
 };
 
 export const generateAccessAndRefreshTokens = async (userId) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { role: true },
+  });
 
   if (!user) {
     throw new Error("User not found");
@@ -51,10 +49,13 @@ export const generateAccessAndRefreshTokens = async (userId) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  /*   await prisma.user.update({
-      where: { id: userId },
-      data: { refreshToken: refreshToken },
-    }); */
+  await prisma.refreshToken.create({
+    data: {
+      userId: userId,
+      token: refreshToken,
+      expiresAt: addMinutes(new Date(), 7 * 24 * 60), // 7 days
+    },
+  });
 
   return { accessToken, refreshToken };
 };
