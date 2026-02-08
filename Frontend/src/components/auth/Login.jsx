@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+<<<<<<< HEAD
 <<<<<<< HEAD:Frontend/src/component/Login.jsx
   const {
     register,
@@ -27,6 +28,9 @@ const Login = () => {
 =======
   return (      
 >>>>>>> 16a4050120c1d3f86379ed7ae9d6dcef44a2a2fa:Frontend/src/components/auth/Login.jsx
+=======
+  return (      
+>>>>>>> 16a4050120c1d3f86379ed7ae9d6dcef44a2a2fa
     <div className="flex w-full min-h-screen bg-gray-50">
       {/* LEFT SIDE: Image & Branding (Hidden on mobile, visible on medium screens and up) */}
       <div className="hidden md:flex w-1/2 bg-green-900 relative justify-center items-center overflow-hidden">
