@@ -1,23 +1,10 @@
 import "./App.css";
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { BrowserRouter, Router, Routes, Route } from "react-router-dom";
-import Login from "./component/login.jsx";
-import SignUp from "./component/SignUp.jsx";
-
-=======
-=======
->>>>>>> 16a4050120c1d3f86379ed7ae9d6dcef44a2a2fa
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage.jsx";
 import MenuPage from "./pages/MenuPage.jsx";
 import PlansPage from "./pages/PlansPage.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
-<<<<<<< HEAD
->>>>>>> 16a4050120c1d3f86379ed7ae9d6dcef44a2a2fa
-=======
->>>>>>> 16a4050120c1d3f86379ed7ae9d6dcef44a2a2fa
 function App() {
   return (
     <BrowserRouter>
