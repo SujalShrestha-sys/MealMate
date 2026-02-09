@@ -30,8 +30,8 @@ const HeroSection = ({ scrollToPlans }) => {
             </p>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg">
+            <div className="flex justify-center gap-2 mb-6">
+              <div className="flex items-center gap-2 bg-green-50 px-4 py-3 rounded-lg">
                 <CheckCircle size={20} className="text-green-600" />
                 <span className="text-sm font-semibold text-gray-900">
                   100% Fresh Ingredients
@@ -43,7 +43,7 @@ const HeroSection = ({ scrollToPlans }) => {
                   On-Time Delivery
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg">
+              <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg">
                 <Shield size={20} className="text-green-600" />
                 <span className="text-sm font-semibold text-gray-900">
                   Quality Assured
