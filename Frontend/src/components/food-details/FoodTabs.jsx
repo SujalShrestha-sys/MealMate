@@ -5,7 +5,7 @@ const FoodTabs = () => {
   const [activeTab, setActiveTab] = useState("details");
 
   return (
-    <div className="bg-slate-50 border-t text-center border-slate-100 px-8 lg:px-12 py-8">
+    <div className="bg-slate-50 text-center border-slate-100 px-8 lg:px-12 py-8">
       <div className="flex items-center gap-2 mb-8 bg-white p-2 rounded-xl border border-slate-200/60 inline-flex shadow-sm">
         {["Details", "Nutrition", "Customer Reviews"].map((tab) => (
           <button

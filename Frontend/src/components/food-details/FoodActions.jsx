@@ -7,7 +7,7 @@ const FoodActions = ({ product, quantity, updateQuantity }) => {
   return (
     <div className="mt-auto text-center">
       <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-slate-400 font-medium uppercase tracking-wider">
             Total Price
           </span>
