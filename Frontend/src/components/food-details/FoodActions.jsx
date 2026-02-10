@@ -1,5 +1,6 @@
 import React from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
+import Button from "../common/Button";
 
 const FoodActions = ({ product, quantity, updateQuantity }) => {
   if (!product) return null;
@@ -35,15 +36,18 @@ const FoodActions = ({ product, quantity, updateQuantity }) => {
             </button>
           </div>
         ) : (
-          <button
+          <Button
             onClick={() => updateQuantity(product.id, 1)}
-            className="group relative inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white text-sm font-semibold rounded-full shadow-lg shadow-slate-200 hover:bg-green-700 hover:-translate-y-0.5 transition-all duration-300"
+            className="rounded-full shadow-lg shadow-slate-200 group"
+            icon={
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                <ShoppingCart size={14} />
+              </div>
+            }
+            iconPosition="right"
           >
-            <span>Add to Cart</span>
-            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-              <ShoppingCart size={14} />
-            </div>
-          </button>
+            Add to Cart
+          </Button>
         )}
       </div>
     </div>

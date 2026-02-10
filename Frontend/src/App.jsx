@@ -7,6 +7,8 @@ import PlansPage from "./pages/PlansPage.jsx";
 import FoodDetailsPage from "./pages/FoodDetailsPage.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
+import ChatWidget from "./components/chat/ChatWidget.jsx";
+
 function App() {
   const [cart, setCart] = useState({});
 
@@ -31,6 +33,7 @@ function App() {
         <Route path="/SignUp" element={<SignUp />} />
         <Route path="/food/:id" element={<FoodDetailsPage cart={cart} updateQuantity={updateQuantity} />} />
       </Routes>
+      <ChatWidget />
     </BrowserRouter>
   );
 }
