@@ -1,125 +1,131 @@
-import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, Hamburger } from 'lucide-react';
-import { Link } from "react-router-dom"
-
+import React, { useState } from "react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Link } from "react-router-dom";
+import AuthLayout from "./shared/AuthLayout";
+import AuthInput from "./shared/AuthInput";
+import AuthButton from "./shared/AuthButton";
+import SocialAuthButton from "./shared/SocialAuthButton";
 
 const Login = () => {
-  // Simple state variables
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  return (      
-    <div className="flex w-full min-h-screen bg-gray-50">
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Add auth logic here
+  };
 
-      {/* LEFT SIDE: Image & Branding (Hidden on mobile, visible on medium screens and up) */}
-      <div className="hidden md:flex w-1/2 bg-green-900 relative justify-center items-center overflow-hidden">
-        {/* Background Image */}
-        <img
-          src='public/images/Background_2.jpg'
-          alt="Canteen Food"
-          className="absolute w-full h-full object-cover opacity-60"
-        />
-
-        {/* Text Overlay */}
-        <div>
-          <div className='flex items-center'>
-            <Hamburger size={48} className='text-orange-600 m-2' />
-            <h1 className='relative z-10 text-center text-5xl font-bold text-white '>MealMate</h1>
-          </div>
-          <p className="text-xl text-center text-green-100">
-            Skip the canteen queue.<br />Order fresh, eat fresh.
-          </p>
-
-        </div>
+  const leftContent = (
+    <div className="flex gap-8">
+      <div>
+        <p className="text-2xl font-semibold text-white">1000+</p>
+        <p className="text-sm font-medium text-green-200/80">Happy Students</p>
       </div>
-
-      {/* RIGHT SIDE: Login Form */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
-
-        <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h2>
-            <p className="text-gray-500">Please enter your details to login.</p>
-          </div>
-
-          {/* Form */}
-          <form className="flex flex-col gap-6">
-
-            {/* Email Input */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-3.5 text-gray-400" size={20} />
-                <input
-                  type="email"
-                  placeholder="john@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 text-gray-400" size={20} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all"
-                />
-
-                {/* Toggle Eye Icon */}
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-
-              {/* Forgot Password Link */}
-              <div className="flex justify-end">
-                <a href="#" className="text-sm text-green-600 font-semibold hover:underline">
-                  Forgot Password?
-                </a>
-              </div>
-            </div>
-
-            {/* Login Button */}
-            <button
-              type="button"
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-green-600/20 active:scale-95"
-            >
-              Sign In
-            </button>
-
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="h-px bg-gray-200 flex-1"></div>
-            <span className="text-gray-400 text-sm">OR</span>
-            <div className="h-px bg-gray-200 flex-1"></div>
-          </div>
-
-          {/* Register Link */}
-          <p className="text-center text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/SignUp" className="text-green-600 font-bold hover:underline">
-              Register now
-            </Link>
-          </p>
-        </div>
+      <div className="w-px bg-white/20" />
+      <div>
+        <p className="text-2xl font-semibold text-white">Fresh</p>
+        <p className="text-sm font-medium text-green-200/80">Meals Daily</p>
+      </div>
+      <div className="w-px bg-white/20" />
+      <div>
+        <p className="text-2xl font-semibold text-white">5 min</p>
+        <p className="text-sm font-medium text-green-200/80">Avg. Pickup</p>
       </div>
     </div>
+  );
+
+  return (
+    <AuthLayout
+      imageSrc="/images/Background_2.jpg"
+      title={
+        <>
+          Skip the queue,
+          <br />
+          <span className="text-emerald-300">savor every bite.</span>
+        </>
+      }
+      subtitle="Order fresh meals from your college canteen — no waiting, no hassle."
+      extraLeftContent={leftContent}
+    >
+      <div className="mb-8 text-center lg:text-left">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h2>
+        <p className="text-gray-500">
+          Enter your credentials to access your account.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <AuthInput
+          label="Email Address"
+          type="email"
+          name="email"
+          placeholder="john@college.edu"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          icon={Mail}
+          required
+        />
+
+        <AuthInput
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          name="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          icon={Lock}
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-400 hover:text-green-600 transition-colors duration-200"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          }
+          required
+        />
+
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 accent-green-600"
+            />
+            <span className="text-sm text-gray-600">Remember me</span>
+          </label>
+          <Link
+            to="/forgot-password"
+            className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors duration-200"
+          >
+            Forgot Password?
+          </Link>
+        </div>
+
+        <AuthButton type="submit">Sign In</AuthButton>
+      </form>
+
+      <div className="flex items-center gap-4 my-7">
+        <div className="h-px bg-gray-200 flex-1" />
+        <span className="text-gray-400 text-sm font-medium">
+          or continue with
+        </span>
+        <div className="h-px bg-gray-200 flex-1" />
+      </div>
+
+      <SocialAuthButton onClick={() => {}} />
+
+      <p className="text-center text-gray-500 mt-8">
+        Don't have an account?{" "}
+        <Link
+          to="/SignUp"
+          className="text-green-600 font-semibold hover:text-green-700 transition-colors duration-200"
+        >
+          Create account
+        </Link>
+      </p>
+    </AuthLayout>
   );
 };
 
