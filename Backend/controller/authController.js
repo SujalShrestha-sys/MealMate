@@ -47,14 +47,13 @@ export const RegisterUser = async (req, res) => {
       message: "Registered successfully",
       data: newUser,
     });
-    
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       success: false,
       message: error.message || "Internal server error",
     });
-  } 
+  }
 };
 
 export const LoginUser = async (req, res) => {
@@ -91,10 +90,20 @@ export const LoginUser = async (req, res) => {
       });
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      user.id,
+    );
 
     console.log("Access Token:", accessToken);
     console.log("Refresh Token:", refreshToken);
+
+    // Set httpOnly cookie for refresh token
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     return res.status(200).json({
       success: true,
@@ -107,7 +116,6 @@ export const LoginUser = async (req, res) => {
       },
       tokens: {
         accessToken,
-        refreshToken,
       },
     });
   } catch (err) {
@@ -121,7 +129,7 @@ export const LoginUser = async (req, res) => {
 
 export const RefreshAccessToken = async (req, res) => {
   try {
-    const incommingToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    const incommingToken = req.cookies?.refreshToken;
 
     if (!incommingToken) {
       return res.status(401).json({
@@ -138,65 +146,107 @@ export const RefreshAccessToken = async (req, res) => {
       },
     });
 
-    console.log("USER", user);
+    console.log("STUDENT", user);
 
-    if (!user || user.refreshToken != incommingToken) {
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid refresh token",
       });
     }
 
+    //check token exists in DB
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: {
+        token: incommingToken,
+        userId: user.id,
+      },
+    });
+
+    if (!storedToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    //check expiration manually
+    if (storedToken.expiresAt < new Date()) {
+      await prisma.refreshToken.delete({
+        where: {
+          id: storedToken.id,
+        },
+      });
+
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token expired!",
+      });
+    }
+
+    //Delete old token
+    await prisma.refreshToken.delete({
+      where: {
+        id: storedToken.id,
+      },
+    });
+
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
       user.id,
     );
+
+    // Set httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     return res.status(200).json({
       success: true,
       message: "Access token refreshed",
       tokens: {
         accessToken,
-        refreshToken,
       },
     });
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "Invalid refresh token",
+      message: "Invalid or expired refresh token",
     });
   }
 };
 
 export const logoutUser = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const refreshToken = req.cookies?.refreshToken;
 
-    // Find how many refresh tokens the user currently has
-    const tokenCount = await prisma.refreshToken.count({
-      where: { userId },
-    });
-
-    if (tokenCount === 0) {
-      // No tokens found — user is already logged out
+    if (!refreshToken) {
       return res.status(400).json({
         success: false,
-        message: "User already logged out",
+        message: "Refresh token required",
       });
     }
 
-    await prisma.refreshToken.deleteMany({
-      where: { userId },
+    //Delete the specific sesssion
+    const deleted = await prisma.refreshToken.deleteMany({
+      where: {
+        token: refreshToken,
+      },
     });
+
+    res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
 
     return res.status(200).json({
       success: true,
-      message: "User logged out successfully",
+      message: "Logged out successfully",
     });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong" || error.message,
+      message: "Invalid or expired refresh token",
     });
   }
 };

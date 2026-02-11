@@ -10,7 +10,7 @@ router.post("/login", LoginUser);
 
 router.post("/refresh-token", RefreshAccessToken)
 
-router.post("/logout", AuthenticateToken, logoutUser)
+router.post("/logout", logoutUser)
 
 router.post("/forget-password", ForgetPassword)
 
