@@ -56,7 +56,7 @@ const SignUp = () => {
         'Track your daily nutrition',
       ].map((benefit) => (
         <div key={benefit} className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-full bg-emerald-400/20 flex items-center justify-center flex-shrink-0">
+          <div className="w-6 h-6 rounded-full bg-emerald-400/20 flex items-center justify-center shrink-0">
             <Check size={14} className="text-emerald-300" />
           </div>
           <span className="text-green-100/90 text-sm">{benefit}</span>
