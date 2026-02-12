@@ -271,29 +271,34 @@ export const ForgetPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found with this email",
+        message: "If this email exists, a reset link has been sent",
       });
     }
 
     //Generate the token
     const { resetToken, hashedToken } = generateResetToken();
 
-    await prisma.user.update({
+    await prisma.passwordResetToken.deleteMany({
       where: {
-        email,
+        userId: user.id,
       },
+    });
+
+    await prisma.passwordResetToken.create({
       data: {
-        resetToken: hashedToken,
-        resetTokenExpiry: new Date(Date.now() + 15 * 60 * 1000), //15 min expiry
+        token: hashedToken,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000), //15 min expiry
+        userId: user.id,
       },
     });
 
     const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
 
+    // In production → send via email
     return res.status(200).json({
       success: true,
       message: "Password reset link generated successfully",
-      resetURL,
+      resetURL, //remove in production
     });
   } catch (error) {
     console.log(error);
@@ -310,6 +315,13 @@ export const ResetPassword = async (req, res) => {
 
     const { password, confirmPassword } = req.body;
 
+    if (!resetToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Reset token is required",
+      });
+    }
+
     if (!password || !confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -324,36 +336,58 @@ export const ResetPassword = async (req, res) => {
       });
     }
 
-    //Hash token to compare with DB
-    const hasedToken = crypto
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
+    }
+
+    //Hash incomming token
+    const hashedToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    const user = await prisma.user.findFirst({
+    //find reset token record
+    const resetTokenRecord = await prisma.passwordResetToken.findFirst({
       where: {
-        resetToken: hasedToken,
-        resetTokenExpiry: { gt: new Date() },
+        token: hashedToken,
+        expiresAt: { gt: new Date() },
       },
     });
 
-    if (!user) {
+    if (!resetTokenRecord) {
       return res.status(400).json({
         success: false,
         message: "Invalid or expired reset token",
       });
     }
 
+    //Hash new password
     const newHashedPassword = await hashedPassword(password);
 
-    await prisma.user.update({
+    //update user password
+    await prisma.user.updateMany({
       where: {
-        id: user.id,
+        id: resetTokenRecord.userId,
       },
       data: {
         password: newHashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null,
+      },
+    });
+
+    //Delete all reset tokens for the user
+    await prisma.passwordResetToken.deleteMany({
+      where: {
+        userId: resetTokenRecord.userId,
+      },
+    });
+
+    //logout from all the connected devices
+    await prisma.refreshToken.deleteMany({
+      where: {
+        userId: resetTokenRecord.userId,
       },
     });
 

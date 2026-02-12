@@ -4,8 +4,6 @@ export const AuthenticateToken = (req, res, next) => {
   try {
     const authHeader = req.headers?.authorization;
 
-    console.log("Auth Header:", authHeader); // Debugging line
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
@@ -20,10 +18,10 @@ export const AuthenticateToken = (req, res, next) => {
 
     next();
   } catch (err) {
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
       error: err.message,
-      message: "Invalid Token!",
+      message: "Invalid or expired token",
     });
   }
 };
