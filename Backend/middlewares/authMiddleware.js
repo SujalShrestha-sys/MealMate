@@ -26,7 +26,7 @@ export const AuthenticateToken = (req, res, next) => {
   }
 };
 
-export const AuthorizeRoles = ([...roles]) => {
+export const AuthorizeRoles = (...roles) => {
   return (req, res, next) => {
     const userRole = req.user?.role;
 

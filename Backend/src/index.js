@@ -1,19 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import prisma from "../db/dbConfig.js";
+import { createServer } from "http";
+import cors from "cors";
+import errorHandling from "../errorHandling.js";
+import { Server } from "socket.io";
+import cookieParser from "cookie-parser";
+
 import express from "express";
 import authRouter from "../routes/authRoutes.js";
 import chatRouter from "../routes/chatRoutes.js";
-import cors from "cors";
-import prisma from "../db/dbConfig.js";
-import errorHandling from "../errorHandling.js";
-import { createAdmin } from "../prisma/seed.js";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import cookieParser from "cookie-parser";
-import dishesRouter from "../routes/dishesRoutes.js"
-
-
+import subscriptionPlanRouter from "../routes/subscriptionPlanRoutes.js";
+import dishesRouter from "../routes/dishesRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -24,7 +23,7 @@ const io = new Server(httpServer, {
   },
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middlewares
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
@@ -56,6 +55,7 @@ io.on("connection", (socket) => {
 app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/dishes", dishesRouter);
+app.use("/api/plans", subscriptionPlanRouter);
 
 // Global Error Handler
 app.use(errorHandling);
@@ -74,15 +74,6 @@ async function startServer() {
 
     await prisma.$connect();
     console.log("Database connected successfully");
-
-    /* await createAdmin()
-      .catch((error) => {
-        console.error("Error in seed:", error);
-        process.exit(1);
-      })
-      .finally(async () => {
-        await prisma.$disconnect();
-      }); */
 
     httpServer.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);

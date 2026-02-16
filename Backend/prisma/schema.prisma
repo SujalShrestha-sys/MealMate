@@ -166,9 +166,17 @@ model Notification {
 
 model SubscriptionPlan {
   id           String             @id @default(uuid())
-  name         String
+  name         String             @unique
+  description  String?
   price        Float
   durationDays Int
+  period       String             @default("week") // "week" or "month"
+  meals        Int                @default(0)
+  features     String[]           @default([]) // JSON array stored as strings
+  popular      Boolean            @default(false)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
   users        UserSubscription[]
 }
 
@@ -177,6 +185,7 @@ model UserSubscription {
   startDate DateTime
   endDate   DateTime
   status    String
+  createdAt    DateTime           @default(now())
   userId    String
   planId    String
   plan      SubscriptionPlan @relation(fields: [planId], references: [id])
