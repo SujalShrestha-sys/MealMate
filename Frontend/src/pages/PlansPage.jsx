@@ -5,7 +5,7 @@ import HeroSection from "../components/plans/HeroSection";
 import PlanCard from "../components/plans/PlanCard";
 
 const PlansPage = () => {
-  const [planType, setPlanType] = useState("monthly");
+  const [planType, setPlanType] = useState("weekly");
   const plansRef = useRef(null);
 
   const scrollToPlans = () => {
