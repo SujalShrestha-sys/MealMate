@@ -66,6 +66,13 @@ model CartItem {
   dish     Dish   @relation(fields: [dishId], references: [id])
 }
 
+enum DishBadge {
+  BESTSELLER
+  NEW
+  CHEF_SPECIAL
+  LIMITED
+}
+
 model Dish {
   id          String           @id @default(uuid())
   name        String
@@ -73,10 +80,14 @@ model Dish {
   price       Float
   imageUrl    String?
   isAvailable Boolean          @default(true)
+  isDeleted   Boolean          @default(false)
+  categoryId  String
+
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-  categoryId  String
-  badge       String?
+  
+
+  badge       DishBadge?
   cartItems   CartItem[]
   category    Category         @relation(fields: [categoryId], references: [id])
   ingredients DishIngredient[]
@@ -106,9 +117,14 @@ model DishIngredient {
 
 model InventoryItem {
   id                String           @id @default(uuid())
-  name              String
+  name              String            @unique
   unit              String
+  quantity          Float            @default(0)
   lowStockThreshold Int
+
+  isDeleted         Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   dishes            DishIngredient[]
 }
 
@@ -172,7 +188,7 @@ model SubscriptionPlan {
   durationDays Int
   period       String             @default("week") // "week" or "month"
   meals        Int                @default(0)
-  features     String[]           @default([]) // JSON array stored as strings
+  features     String[]           @default([])
   popular      Boolean            @default(false)
   isActive     Boolean            @default(true)
   createdAt    DateTime           @default(now())
@@ -195,6 +211,9 @@ model UserSubscription {
 model Category {
   id     String @id @default(uuid())
   name   String @unique
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   dishes Dish[]
 }
 

@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.use(AuthenticateToken); // Protect all chat routes
+router.use(AuthenticateToken);
 
 router.post("/create", createConversation);
 router.get("/conversations", getConversations);

@@ -425,42 +425,16 @@ export const deleteDish = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate dish exists
-    const dish = await prisma.dish.findUnique({
+    await prisma.dish.update({
       where: { id },
+      data: { isDeleted: true },
     });
 
-    if (!dish) {
-      return res.status(404).json({
-        success: false,
-        message: "Dish not found",
-      });
-    }
-
-    // Delete dish
-    await prisma.dish.delete({
-      where: { id },
-    });
-
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Dish deleted successfully",
+      message: "Dish removed from menu",
     });
   } catch (error) {
-    console.error("Error deleting dish:", error.message);
-
-    // Handle foreign key constraint errors
-    if (error.code === "P2014") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Cannot delete dish. It may be referenced in orders or cart items",
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to delete dish",
-    });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

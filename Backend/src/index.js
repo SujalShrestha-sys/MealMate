@@ -13,6 +13,7 @@ import authRouter from "../routes/authRoutes.js";
 import chatRouter from "../routes/chatRoutes.js";
 import subscriptionPlanRouter from "../routes/subscriptionPlanRoutes.js";
 import dishesRouter from "../routes/dishesRoutes.js";
+import inventoryRoutes from "../routes/inventoryRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -56,6 +57,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/dishes", dishesRouter);
 app.use("/api/plans", subscriptionPlanRouter);
+app.use("/api/admin/inventory", inventoryRoutes);
 
 // Global Error Handler
 app.use(errorHandling);

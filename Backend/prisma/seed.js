@@ -65,9 +65,9 @@ export const createAdmin = async () => {
       },
     });
 
-    console.log("✅ Admin created successfully:", admin.name, "with role ADMIN");
+    console.log("Admin created successfully:", admin.name, "with role ADMIN");
   } catch (error) {
-    console.error("❌ Error in seed:", error.message);
+    console.error("Error in seed:", error.message);
   } finally {
     await prisma.$disconnect();
   }
