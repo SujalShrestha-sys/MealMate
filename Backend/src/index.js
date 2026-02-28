@@ -14,6 +14,8 @@ import chatRouter from "../routes/chatRoutes.js";
 import subscriptionPlanRouter from "../routes/subscriptionPlanRoutes.js";
 import dishesRouter from "../routes/dishesRoutes.js";
 import inventoryRoutes from "../routes/inventoryRoutes.js";
+import orderRoutes from "../routes/orderRoutes.js";
+import pickupSlotRoutes from "../routes/pickupslotRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -29,6 +31,7 @@ const PORT = process.env.PORT || 5001;
 // Middlewares
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
 
@@ -58,6 +61,8 @@ app.use("/api/chat", chatRouter);
 app.use("/api/dishes", dishesRouter);
 app.use("/api/plans", subscriptionPlanRouter);
 app.use("/api/admin/inventory", inventoryRoutes);
+app.use("/api/admin/orders", orderRoutes);
+app.use("/api/pickup-slots", pickupSlotRoutes);
 
 // Global Error Handler
 app.use(errorHandling);

@@ -74,18 +74,17 @@ enum DishBadge {
 }
 
 model Dish {
-  id          String           @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String?
   price       Float
   imageUrl    String?
-  isAvailable Boolean          @default(true)
-  isDeleted   Boolean          @default(false)
+  isAvailable Boolean @default(true)
+  isDeleted   Boolean @default(false)
   categoryId  String
 
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   badge       DishBadge?
   cartItems   CartItem[]
@@ -116,22 +115,31 @@ model DishIngredient {
 }
 
 model InventoryItem {
-  id                String           @id @default(uuid())
-  name              String            @unique
+  id                String @id @default(uuid())
+  name              String @unique
   unit              String
-  quantity          Float            @default(0)
+  quantity          Float  @default(0)
   lowStockThreshold Int
 
-  isDeleted         Boolean          @default(false)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  dishes            DishIngredient[]
+  isDeleted Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  dishes    DishIngredient[]
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
 }
 
 model Order {
   id           String      @id @default(uuid())
   totalAmount  Float
-  status       String
+  status       OrderStatus
   createdAt    DateTime    @default(now())
   userId       String
   pickupSlotId String
@@ -153,8 +161,9 @@ model OrderItem {
 
 model PickupSlot {
   id        String   @id @default(uuid())
-  startTime DateTime
-  endTime   DateTime
+  startTime DateTime @default(now())
+  endTime   DateTime 
+  updatedAt DateTime @default(now()) @updatedAt
   maxOrders Int
   orders    Order[]
 }
@@ -201,7 +210,7 @@ model UserSubscription {
   startDate DateTime
   endDate   DateTime
   status    String
-  createdAt    DateTime           @default(now())
+  createdAt DateTime         @default(now())
   userId    String
   planId    String
   plan      SubscriptionPlan @relation(fields: [planId], references: [id])
@@ -209,12 +218,12 @@ model UserSubscription {
 }
 
 model Category {
-  id     String @id @default(uuid())
-  name   String @unique
-  isActive Boolean @default(true)
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  dishes Dish[]
+  dishes    Dish[]
 }
 
 model Conversation {
