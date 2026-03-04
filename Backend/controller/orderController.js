@@ -12,6 +12,14 @@ export const createOrder = async (req, res) => {
       });
     }
 
+    // Validate payment method
+    if (!["CASH", "KHALTI"].includes(method)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment method. Must be CASH or KHALTI",
+      });
+    }
+
     // Check slot availability
     const slot = await prisma.pickupSlot.findUnique({
       where: { id: pickupSlotId },
@@ -75,22 +83,9 @@ export const createOrder = async (req, res) => {
         orderId: order.id,
         method,
         amount: total,
-        status: "PENDING",
+        status: method === "CASH" ? "COMPLETED" : "PENDING",
       },
     });
-
-    // Add items to cart (optional)
-    let cart = await prisma.cart.findUnique({ where: { userId } });
-    if (!cart) cart = await prisma.cart.create({ data: { userId } });
-    for (let item of items) {
-      await prisma.cartItem.create({
-        data: {
-          cartId: cart.id,
-          dishId: item.dishId,
-          quantity: item.quantity,
-        },
-      });
-    }
 
     res.status(201).json({
       success: true,
@@ -101,7 +96,6 @@ export const createOrder = async (req, res) => {
       data: {
         order,
         payment,
-        cart,
       },
     });
   } catch (err) {
@@ -134,6 +128,43 @@ export const getAllOrders = async (req, res) => {
 
     res.json({ success: true, data: orders });
   } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getOrdersByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        items: {
+          include: {
+            dish: true,
+          },
+        },
+        payment: true,
+        pickupSlot: true,
+      },
+    });
+
+    if (orders.length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+        message: "No orders found for this user",
+      });
+    }
+
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -168,6 +199,18 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // Check if order exists
+    const existingOrder = await prisma.order.findUnique({
+      where: { id },
+    });
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
     const order = await prisma.order.update({
       where: { id },
       data: { status },
@@ -189,6 +232,7 @@ export const updateOrderStatus = async (req, res) => {
       data: order,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -200,6 +244,7 @@ export const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
 
+    // Check if order exists
     const existingOrder = await prisma.order.findUnique({
       where: { id: orderId },
     });
@@ -208,6 +253,17 @@ export const cancelOrder = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Order not found",
+      });
+    }
+
+    // Check if order is already completed or cancelled
+    if (
+      existingOrder.status === "COMPLETED" ||
+      existingOrder.status === "CANCELLED"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot cancel order with status: ${existingOrder.status}`,
       });
     }
 
@@ -232,20 +288,13 @@ export const cancelOrder = async (req, res) => {
       },
     });
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
     res.json({
       success: true,
       message: "Order cancelled",
       data: order,
     });
   } catch (error) {
-    console.log(error.message);
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Server error",

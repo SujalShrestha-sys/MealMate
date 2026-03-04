@@ -5,6 +5,7 @@ import {
   cancelOrder,
   getAllOrders,
   updateOrderStatus,
+  getOrdersByUser,
 } from "../controller/orderController.js";
 
 import {
@@ -16,6 +17,9 @@ const router = express.Router();
 // Protected routes (authenticated users only)
 router.post("/create", AuthenticateToken, createOrder);
 router.delete("/:orderId/cancel", AuthenticateToken, cancelOrder);
+
+// Get user's own orders
+router.get("/user/:userId", AuthenticateToken, getOrdersByUser);
 
 // Admin only routes
 router.get(

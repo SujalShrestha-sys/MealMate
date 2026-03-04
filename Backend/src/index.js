@@ -15,6 +15,7 @@ import subscriptionPlanRouter from "../routes/subscriptionPlanRoutes.js";
 import dishesRouter from "../routes/dishesRoutes.js";
 import inventoryRoutes from "../routes/inventoryRoutes.js";
 import orderRoutes from "../routes/orderRoutes.js";
+import paymentRoutes from "../routes/paymentRoutes.js";
 import pickupSlotRoutes from "../routes/pickupslotRoutes.js";
 
 const app = express();
@@ -62,6 +63,7 @@ app.use("/api/dishes", dishesRouter);
 app.use("/api/plans", subscriptionPlanRouter);
 app.use("/api/admin/inventory", inventoryRoutes);
 app.use("/api/admin/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use("/api/pickup-slots", pickupSlotRoutes);
 
 // Global Error Handler
