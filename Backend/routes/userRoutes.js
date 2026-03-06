@@ -1,0 +1,27 @@
+import express from "express";
+import {
+    getAllUsers,
+    getUserById,
+    updateUser,
+    deleteUser,
+} from "../controller/userController.js";
+import {
+    AuthenticateToken,
+    AuthorizeRoles,
+} from "../middlewares/authMiddleware.js";
+
+const router = express.Router();
+
+// Get all users (admin only)
+router.get("/", AuthenticateToken, AuthorizeRoles(["admin"]), getAllUsers);
+
+// Get user by ID (own profile or admin)
+router.get("/:id", AuthenticateToken, getUserById);
+
+// Update user (own profile or admin)
+router.put("/:id", AuthenticateToken, updateUser);
+
+// Delete user (admin only)
+router.delete("/:id", AuthenticateToken, AuthorizeRoles(["admin"]), deleteUser);
+
+export default router;

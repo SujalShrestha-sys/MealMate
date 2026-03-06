@@ -3,8 +3,9 @@ import prisma from "../db/dbConfig.js";
 export const createPickupSlot = async (req, res) => {
   try {
     const { startTime, endTime, maxOrders } = req.body;
+    const maxOrdersNumber = Number(maxOrders);
 
-    if (!startTime || !endTime || !maxOrders) {
+    if (!startTime || !endTime || !maxOrdersNumber) {
       return res
         .status(400)
         .json({ success: false, message: "Missing required fields" });
@@ -13,7 +14,7 @@ export const createPickupSlot = async (req, res) => {
     const startTimeObj = new Date(startTime);
     const endTimeObj = new Date(endTime);
 
-     if (isNaN(startTimeObj) || isNaN(endTimeObj)) {
+    if (isNaN(startTimeObj) || isNaN(endTimeObj)) {
       return res.status(400).json({
         success: false,
         message: "Invalid date format",
@@ -27,7 +28,7 @@ export const createPickupSlot = async (req, res) => {
       });
     }
 
-     if (startTimeObj < new Date()) {
+    if (startTimeObj < new Date()) {
       return res.status(400).json({
         success: false,
         message: "Cannot create a pickup slot in the past",
@@ -38,7 +39,7 @@ export const createPickupSlot = async (req, res) => {
       data: {
         startTime: startTimeObj,
         endTime: endTimeObj,
-        maxOrders,
+        maxOrders: maxOrdersNumber,
       },
     });
 
@@ -118,7 +119,7 @@ export const deletePickupSlot = async (req, res) => {
       });
     }
 
-    const deletedSlot = await prisma.pickupSlot.delete({
+    await prisma.pickupSlot.delete({
       where: { id },
     });
 
@@ -133,6 +134,8 @@ export const updatePickupSlot = async (req, res) => {
   try {
     const { id } = req.params;
     const { startTime, endTime, maxOrders } = req.body;
+
+    const maxOrdersNumber = Number(maxOrders);
 
     const slot = await prisma.pickupSlot.findUnique({
       where: { id },
@@ -164,9 +167,9 @@ export const updatePickupSlot = async (req, res) => {
     const updatedSlot = await prisma.pickupSlot.update({
       where: { id },
       data: {
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-        maxOrders,
+        startTime: start,
+        endTime: end,
+        maxOrders: maxOrdersNumber,
       },
     });
     res.json({

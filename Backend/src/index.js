@@ -17,6 +17,9 @@ import inventoryRoutes from "../routes/inventoryRoutes.js";
 import orderRoutes from "../routes/orderRoutes.js";
 import paymentRoutes from "../routes/paymentRoutes.js";
 import pickupSlotRoutes from "../routes/pickupslotRoutes.js";
+import userRoutes from "../routes/userRoutes.js";
+import cartRoutes from "../routes/addToCartRoutes.js";
+import notificationRoutes from "../routes/notificationRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -46,13 +49,51 @@ app.use((req, res, next) => {
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
+  // User joins their personal room for notifications
+  socket.on("user_online", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined personal room`);
+    // Broadcast user is online
+    io.emit("user_status_changed", {
+      userId,
+      status: "online",
+    });
+  });
+
+  // Join conversation room for real-time chat
   socket.on("join_conversation", (conversationId) => {
     socket.join(conversationId);
     console.log(`User ${socket.id} joined conversation: ${conversationId}`);
+    // Notify others in conversation
+    io.to(conversationId).emit("user_typing_start", {
+      conversationId,
+      userId: socket.id,
+    });
+  });
+
+  // Handle typing indicator
+  socket.on("typing", (conversationId) => {
+    io.to(conversationId).emit("user_typing", {
+      conversationId,
+      userId: socket.id,
+    });
+  });
+
+  // Handle stop typing
+  socket.on("stop_typing", (conversationId) => {
+    io.to(conversationId).emit("user_stop_typing", {
+      conversationId,
+      userId: socket.id,
+    });
   });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+    // Broadcast user is offline
+    io.emit("user_status_changed", {
+      userId: socket.id,
+      status: "offline",
+    });
   });
 });
 
@@ -61,10 +102,13 @@ app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/dishes", dishesRouter);
 app.use("/api/plans", subscriptionPlanRouter);
+app.use("/api/cart", cartRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin/inventory", inventoryRoutes);
 app.use("/api/admin/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/pickup-slots", pickupSlotRoutes);
+app.use("/api/users", userRoutes);
 
 // Global Error Handler
 app.use(errorHandling);
