@@ -32,7 +32,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "prisma": "^7.0.0"
   }
 }
