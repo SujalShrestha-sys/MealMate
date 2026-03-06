@@ -35,6 +35,18 @@ The platform helps reduce long queues, improves meal planning, and provides an o
 - Prevent long queues at cafeterias
 - Organized meal distribution
 
+## 💳 Payment Integration
+MealMate supports **secure digital payments**.
+
+### Supported Gateway
+- 💜 Khalti Digital Wallet
+
+### Payment Features
+- Secure checkout
+- Payment verification
+- Transaction tracking
+- Payment status management
+
 ### 💳 Subscription Plans
 Students can subscribe to **weekly or monthly meal plans**:
 
@@ -89,3 +101,60 @@ Students can subscribe to **weekly or monthly meal plans**:
 ---
 
 # 🗂️ Project Structure
+
+MealMate
+│
+├── backend
+│ ├── controllers
+│ ├── routes
+│ ├── middlewares
+│ ├── prisma
+│ └── utils
+│
+├── frontend
+│ ├── components
+│ ├── pages
+│ ├── hooks
+│ └── services
+│
+└── README.md
+
+
+---
+
+# 🗄️ Database Design
+
+Main entities used in the system:
+
+- **User**
+- **Role**
+- **Dish**
+- **Category**
+- **Cart**
+- **CartItem**
+- **Order**
+- **OrderItem**
+- **SubscriptionPlan**
+- **UserSubscription**
+- **Feedback**
+- **InventoryItem**
+- **DishIngredient**
+- **PickupSlot**
+- **Payment**
+- **Notification**
+- **Conversation**
+- **Message**
+- **RefreshToken**
+- **PasswordResetToken**
+
+The database is designed using **Prisma ORM with PostgreSQL**.
+
+---
+
+# 🚀 Getting Started
+
+## 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/mealmate.git
+cd mealmate
