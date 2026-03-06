@@ -23,17 +23,40 @@ import notificationRoutes from "../routes/notificationRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Dynamic CORS configuration
+const getAllowedOrigins = () => {
+  if (process.env.NODE_ENV === "production") {
+    return (
+      process.env.FRONTEND_URL?.split(",") || [
+        "https://mealmate-frontend.onrender.com",
+      ]
+    );
+  }
+  return [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5000",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean);
+};
+
+const corsOptions = {
+  origin: getAllowedOrigins(),
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173",
-    credentials: true,
-  },
+  cors: corsOptions,
+  transports: ["websocket", "polling"],
 });
 
 const PORT = process.env.PORT || 5001;
 
 // Middlewares
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -128,8 +151,11 @@ async function startServer() {
     await prisma.$connect();
     console.log("Database connected successfully");
 
-    httpServer.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
+    httpServer.listen(PORT, "0.0.0.0", () => {
+      console.log(
+        `Server running on port ${PORT} in ${process.env.NODE_ENV} mode`,
+      );
+      console.log(`Allowed origins:`, getAllowedOrigins());
     });
   } catch (error) {
     console.error("Database connection failed:", error.message);
