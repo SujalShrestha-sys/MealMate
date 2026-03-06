@@ -1,6 +1,91 @@
-MealMate is a smart meal management and subscription platform designed to simplify how students order and manage their daily meals. The system allows users to explore dishes, subscribe to meal plans, place orders, and schedule meal pickups efficiently.
-The platform aims to reduce waiting time, improve meal planning, and provide a seamless food ordering experience within campuses or student communities.
-Users can browse available dishes, add meals to their cart, and place orders for scheduled pickup slots. Students can also subscribe to weekly or monthly meal plans that offer better pricing and convenience. The system tracks orders, manages subscriptions, handles payments, and provides notifications to keep users informed.
-The backend is built using Node.js, Express, Prisma ORM, and PostgreSQL, while the frontend uses React for an interactive and responsive user experience.
-Additionally, the system includes features such as authentication with secure token management, feedback and rating for dishes, inventory tracking for ingredients, real-time chat support, and notification management.
-MealMate focuses on creating an organized, efficient, and scalable solution for campus food services while improving the overall dining experience for students.
+# 🍽️ MealMate — Smart Meal Subscription & Ordering Platform
+
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
+![Express](https://img.shields.io/badge/Framework-Express.js-black)
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+MealMate is a **smart meal management and subscription platform** designed to simplify how students browse meals, subscribe to plans, and place food orders.  
+The platform helps reduce long queues, improves meal planning, and provides an organized food ordering system for campus environments.
+
+---
+
+# ✨ Features
+
+### 🔐 Authentication & Security
+- Secure **JWT authentication**
+- **Refresh token** management
+- Password reset functionality
+- Role-based user access
+
+### 🍛 Smart Menu System
+- Browse dishes by **category**
+- **Search dishes** instantly
+- View dish details and availability
+
+### 🛒 Cart & Ordering
+- Add/remove dishes from cart
+- Manage quantities easily
+- Place orders smoothly
+
+### 📅 Pickup Slot Scheduling
+- Choose **available pickup time slots**
+- Prevent long queues at cafeterias
+- Organized meal distribution
+
+### 💳 Subscription Plans
+Students can subscribe to **weekly or monthly meal plans**:
+
+- Weekly Veg Delight
+- Weekly Basic
+- Weekly Power Pack
+- Weekly Premium
+- Monthly Veg Delight
+- Monthly Basic
+- Monthly Power Pack
+- Monthly Premium
+
+### ⭐ Feedback System
+- Rate dishes
+- Leave comments
+- Improve food quality through feedback
+
+### 📦 Inventory Tracking
+- Track ingredients used in dishes
+- Maintain stock availability
+
+### 🔔 Notifications
+- Order updates
+- System alerts
+- Subscription notifications
+
+### 💬 Chat System
+- Built-in messaging system
+- Communication with support/admin
+
+---
+
+# 🧠 Tech Stack
+
+## Frontend
+- ⚛️ React
+- 🎨 Tailwind CSS
+
+## Backend
+- 🟢 Node.js
+- 🚀 Express.js
+- 🔗 Prisma ORM
+
+## Database
+- 🐘 PostgreSQL
+
+## Tools & Utilities
+- 🔐 JWT Authentication
+- 📡 REST APIs
+- 🐙 Git & GitHub
+
+---
+
+# 🗂️ Project Structure
