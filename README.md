@@ -1,0 +1,6 @@
+MealMate is a smart meal management and subscription platform designed to simplify how students order and manage their daily meals. The system allows users to explore dishes, subscribe to meal plans, place orders, and schedule meal pickups efficiently.
+The platform aims to reduce waiting time, improve meal planning, and provide a seamless food ordering experience within campuses or student communities.
+Users can browse available dishes, add meals to their cart, and place orders for scheduled pickup slots. Students can also subscribe to weekly or monthly meal plans that offer better pricing and convenience. The system tracks orders, manages subscriptions, handles payments, and provides notifications to keep users informed.
+The backend is built using Node.js, Express, Prisma ORM, and PostgreSQL, while the frontend uses React for an interactive and responsive user experience.
+Additionally, the system includes features such as authentication with secure token management, feedback and rating for dishes, inventory tracking for ingredients, real-time chat support, and notification management.
+MealMate focuses on creating an organized, efficient, and scalable solution for campus food services while improving the overall dining experience for students.
