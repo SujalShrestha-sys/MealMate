@@ -11,7 +11,7 @@ export const RegisterUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -61,9 +61,7 @@ export const LoginUser = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Validate input
-    if (
-      [name, email, password].some((field) => !field || field.trim() === "")
-    ) {
+    if ([email, password].some((field) => !field || field.trim() === "")) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",

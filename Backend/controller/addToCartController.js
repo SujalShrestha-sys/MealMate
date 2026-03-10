@@ -20,12 +20,10 @@ export const addToCart = async (req, res) => {
     }
 
     if (quantity <= 0 || !Number.isInteger(quantity)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Quantity must be a positive integer",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be a positive integer",
+      });
     }
 
     // Verify dish exists
@@ -170,12 +168,10 @@ export const updateCartItem = async (req, res) => {
     }
 
     if (quantity <= 0 || !Number.isInteger(quantity)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Quantity must be a positive integer",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be a positive integer",
+      });
     }
 
     // Verify cart item exists and belongs to user
@@ -191,12 +187,10 @@ export const updateCartItem = async (req, res) => {
     }
 
     if (cartItem.cart.userId !== userId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to update this cart item",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this cart item",
+      });
     }
 
     const updatedItem = await prisma.cartItem.update({
@@ -243,12 +237,10 @@ export const removeCartItem = async (req, res) => {
     }
 
     if (cartItem.cart.userId !== userId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to remove this cart item",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to remove this cart item",
+      });
     }
 
     await prisma.cartItem.delete({

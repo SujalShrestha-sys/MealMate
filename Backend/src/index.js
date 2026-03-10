@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
-
+import "dotenv/config";
 import prisma from "../db/dbConfig.js";
 import { createServer } from "http";
 import cors from "cors";
