@@ -5,6 +5,7 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt.js";
 import { generateResetToken } from "../utils/token.js";
+import { sendPasswordResetEmail } from "../utils/resend.js";
 import crypto from "crypto";
 
 export const RegisterUser = async (req, res) => {
@@ -293,13 +294,15 @@ export const ForgetPassword = async (req, res) => {
       },
     });
 
-    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+    const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetURL = `${frontendURL}/reset-password/${resetToken}`;
 
-    // In production → send via email
+    // Send the reset link via email
+    await sendPasswordResetEmail(user.email, resetURL);
+
     return res.status(200).json({
       success: true,
-      message: "Password reset link generated successfully",
-      resetURL, //remove in production
+      message: "Password reset link has been sent to your email",
     });
   } catch (error) {
     console.log(error);

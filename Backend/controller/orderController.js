@@ -1,3 +1,4 @@
+import { type } from "os";
 import prisma from "../db/dbConfig.js";
 
 export const createOrder = async (req, res) => {
@@ -77,16 +78,27 @@ export const createOrder = async (req, res) => {
       include: { items: true },
     });
 
-    /*  // Create payment
-    const payment = await prisma.payment.create({
+    const notificationId = order.id.slice(-6).toUpperCase();
+
+    let notificationTitle = `New Order #${notificationId}`;
+    let notificationMessage = `You have a new order with total amount Rs.${total}.`;
+
+    if (method === "CASH") {
+      notificationMessage += " Order Cofirmed. Pay at pickup.";
+    } else {
+      notificationMessage += " Please complete payment via Khalti.";
+    }
+
+    const notification = await prisma.notification.create({
       data: {
-        orderId: order.id,
-        method,
-        amount: total,
-        status: method === "CASH" ? "COMPLETED" : "PENDING",
+        userId: order.userId,
+        title: notificationTitle,
+        message: notificationMessage,
+    /*     type: "ORDER_PLACEMENT", */
       },
     });
- */
+
+    req.io.to(order.userId).emit("new_notification", notification);
 
     let payment = null;
     if (method === "CASH") {

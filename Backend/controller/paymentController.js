@@ -273,6 +273,19 @@ export const verifyPayment = async (req, res) => {
           `[Payment] Payment completed: ${payment.id}. Order status updated to CONFIRMED: ${updatedOrder.id}`,
         );
 
+        const orderNotifiation = await prisma.notification.create({
+          data: {
+            userId: payment.order.userId,
+            title: "Payment Verified",
+            message: `Your payment for order ${payment.orderId.slice(-6).toUpperCase()} has been verified. Your order is now confirmed!`,
+            /*  type: "PAYMENT_SUCCESS", */
+          },
+        });
+
+        req.io
+          .to(payment.order.userId)
+          .emit("new_notification", orderNotifiation);
+
         return res.json({
           success: true,
           message: "Payment successful!",
