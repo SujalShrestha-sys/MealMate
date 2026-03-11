@@ -11,7 +11,7 @@ import {
 // Returns payment_url to redirect user to Khalti checkout
 export const initiatePayment = async (req, res) => {
   try {
-    const { orderId, method } = req.body;
+    const { orderId, method, return_url } = req.body;
     const userId = req.user.id; // From JWT token via AuthenticateToken middleware
 
     // Validate input
@@ -32,7 +32,9 @@ export const initiatePayment = async (req, res) => {
       });
 
       if (!order) {
-        console.warn(`[Payment] Order not found: ${orderId} for user ${userId}`);
+        console.warn(
+          `[Payment] Order not found: ${orderId} for user ${userId}`,
+        );
         return res.status(404).json({
           success: false,
           message: "Order not found",
@@ -41,7 +43,9 @@ export const initiatePayment = async (req, res) => {
 
       // SECURITY: Verify user owns this order
       if (order.userId !== userId) {
-        console.error(`[Payment] Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`);
+        console.error(
+          `[Payment] Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`,
+        );
         return res.status(403).json({
           success: false,
           message: "You cannot pay for this order",
@@ -50,8 +54,9 @@ export const initiatePayment = async (req, res) => {
 
       // Validate amount is positive
       if (!order.totalAmount || order.totalAmount <= 0) {
-  
-        console.warn(`[Payment] Invalid order amount: ${order.totalAmount} for order ${orderId}`);
+        console.warn(
+          `[Payment] Invalid order amount: ${order.totalAmount} for order ${orderId}`,
+        );
         return res.status(400).json({
           success: false,
           message: "Invalid order amount",
@@ -74,7 +79,9 @@ export const initiatePayment = async (req, res) => {
       try {
         // Create payment initiate request to Khalti
         const amountInPaisa = rupeesToPaisa(order.totalAmount);
-        console.log(`[Payment] Initiating Khalti payment for order ${orderId}: ${order.totalAmount} rupees (${amountInPaisa} paisa)`);
+        console.log(
+          `[Payment] Initiating Khalti payment for order ${orderId}: ${order.totalAmount} rupees (${amountInPaisa} paisa)`,
+        );
 
         const khaltiResponse = await initiateKhaltiPayment({
           orderId: order.id,
@@ -82,6 +89,7 @@ export const initiatePayment = async (req, res) => {
           customerName: order.user.name,
           customerEmail: order.user.email,
           customerPhone: order.user.phone || "9800000000",
+          returnUrl: return_url,
         });
 
         // Save payment record with pidx (will be completed after callback)
@@ -95,7 +103,9 @@ export const initiatePayment = async (req, res) => {
           },
         });
 
-        console.log(`[Payment] Payment record created: ${payment.id} with pidx ${khaltiResponse.pidx}`);
+        console.log(
+          `[Payment] Payment record created: ${payment.id} with pidx ${khaltiResponse.pidx}`,
+        );
 
         return res.json({
           success: true,
@@ -107,7 +117,10 @@ export const initiatePayment = async (req, res) => {
           },
         });
       } catch (error) {
-        console.error(`[Payment] Khalti initiation failed for order ${orderId}:`, error.message);
+        console.error(
+          `[Payment] Khalti initiation failed for order ${orderId}:`,
+          error.message,
+        );
         return res.status(400).json({
           success: false,
           message: "Failed to initiate Khalti payment",
@@ -119,7 +132,9 @@ export const initiatePayment = async (req, res) => {
       const order = await prisma.order.findUnique({ where: { id: orderId } });
 
       if (!order) {
-        console.warn(`[Payment] Order not found: ${orderId} for user ${userId}`);
+        console.warn(
+          `[Payment] Order not found: ${orderId} for user ${userId}`,
+        );
         return res.status(404).json({
           success: false,
           message: "Order not found",
@@ -128,7 +143,9 @@ export const initiatePayment = async (req, res) => {
 
       // SECURITY: Verify user owns this order
       if (order.userId !== userId) {
-        console.error(`[Payment] Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`);
+        console.error(
+          `[Payment] Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`,
+        );
         return res.status(403).json({
           success: false,
           message: "You cannot pay for this order",
@@ -159,7 +176,9 @@ export const initiatePayment = async (req, res) => {
         },
       });
 
-      console.log(`[Payment] Cash payment recorded for order ${orderId}: ${order.totalAmount} rupees`);
+      console.log(
+        `[Payment] Cash payment recorded for order ${orderId}: ${order.totalAmount} rupees`,
+      );
 
       return res.json({
         success: true,
@@ -167,7 +186,9 @@ export const initiatePayment = async (req, res) => {
         data: payment,
       });
     } else {
-      console.warn(`[Payment] Invalid payment method: ${method} from user ${userId}`);
+      console.warn(
+        `[Payment] Invalid payment method: ${method} from user ${userId}`,
+      );
       return res.status(400).json({
         success: false,
         message: "Invalid payment method. Use CASH or KHALTI",
@@ -211,7 +232,9 @@ export const verifyPayment = async (req, res) => {
 
     // SECURITY: Verify user owns this payment (user must own the order)
     if (payment.order.userId !== userId) {
-      console.error(`[Payment] Unauthorized payment verification! User ${userId} tried to verify payment for order belonging to ${payment.order.userId}`);
+      console.error(
+        `[Payment] Unauthorized payment verification! User ${userId} tried to verify payment for order belonging to ${payment.order.userId}`,
+      );
       return res.status(403).json({
         success: false,
         message: "You cannot verify this payment",
@@ -246,7 +269,9 @@ export const verifyPayment = async (req, res) => {
           },
         });
 
-        console.log(`[Payment] Payment completed: ${payment.id}. Order status updated to CONFIRMED: ${updatedOrder.id}`);
+        console.log(
+          `[Payment] Payment completed: ${payment.id}. Order status updated to CONFIRMED: ${updatedOrder.id}`,
+        );
 
         return res.json({
           success: true,
@@ -281,7 +306,9 @@ export const verifyPayment = async (req, res) => {
         });
       } else {
         // Pending or other status
-        console.log(`[Payment] Payment still pending: ${payment.id}, status=${khaltiResponse.status}`);
+        console.log(
+          `[Payment] Payment still pending: ${payment.id}, status=${khaltiResponse.status}`,
+        );
 
         return res.status(400).json({
           success: false,
@@ -290,7 +317,10 @@ export const verifyPayment = async (req, res) => {
         });
       }
     } catch (error) {
-      console.error(`[Payment] Khalti verification failed for pidx ${pidx}:`, error.message);
+      console.error(
+        `[Payment] Khalti verification failed for pidx ${pidx}:`,
+        error.message,
+      );
 
       return res.status(400).json({
         success: false,
@@ -335,7 +365,9 @@ export const updatePaymentStatus = async (req, res) => {
     const userId = req.user.id;
 
     if (!status || !["COMPLETED", "FAILED"].includes(status)) {
-      console.warn(`[Payment] Invalid status update attempt: ${status} by admin ${userId}`);
+      console.warn(
+        `[Payment] Invalid status update attempt: ${status} by admin ${userId}`,
+      );
       return res.status(400).json({
         success: false,
         message: "Invalid status",
@@ -347,7 +379,9 @@ export const updatePaymentStatus = async (req, res) => {
     });
 
     if (!payment) {
-      console.warn(`[Payment] Admin ${userId} tried to update non-existent payment: ${paymentId}`);
+      console.warn(
+        `[Payment] Admin ${userId} tried to update non-existent payment: ${paymentId}`,
+      );
       return res.status(404).json({
         success: false,
         message: "Payment not found",
@@ -362,7 +396,9 @@ export const updatePaymentStatus = async (req, res) => {
       },
     });
 
-    console.log(`[Payment] Admin ${userId} updated payment ${paymentId} status to ${status}`);
+    console.log(
+      `[Payment] Admin ${userId} updated payment ${paymentId} status to ${status}`,
+    );
 
     res.json({
       success: true,

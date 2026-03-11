@@ -15,7 +15,7 @@ const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY;
 export const initiateKhaltiPayment = async (orderData) => {
   try {
     const payload = {
-      return_url: `${process.env.FRONTEND_URL}/payment/success`,
+      return_url: orderData.return_url || `${process.env.FRONTEND_URL}/payment/verify`, // Frontend should handle this route
       website_url: process.env.FRONTEND_URL,
       amount: orderData.amountInPaisa, // Must be in paisa (rupees * 100)
       purchase_order_id: orderData.orderId,

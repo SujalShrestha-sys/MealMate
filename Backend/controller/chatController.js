@@ -205,7 +205,9 @@ export const sendMessage = async (req, res, next) => {
 
     conversation_full.participants.forEach((participant) => {
       if (participant.id !== senderId) {
-        req.io.to(participant.id).emit("new_message_notification", notification);
+        req.io
+          .to(participant.id)
+          .emit("new_message_notification", notification);
       }
     });
 

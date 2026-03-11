@@ -1,19 +1,23 @@
 import express from "express";
 import {
-    getAllUsers,
-    getUserById,
-    updateUser,
-    deleteUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  getAdminUser,
 } from "../controller/userController.js";
 import {
-    AuthenticateToken,
-    AuthorizeRoles,
+  AuthenticateToken,
+  AuthorizeRoles,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // Get all users (admin only)
 router.get("/", AuthenticateToken, AuthorizeRoles(["admin"]), getAllUsers);
+
+// Get admin user details for chat (admin only)
+router.get("/admin", AuthenticateToken, getAdminUser);
 
 // Get user by ID (own profile or admin)
 router.get("/:id", AuthenticateToken, getUserById);

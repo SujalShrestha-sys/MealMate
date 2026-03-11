@@ -188,3 +188,22 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+export const getAdminUser = async (req, res, next) => {
+  try {
+    const admin = await prisma.user.findFirst({
+      where: { role: { name: "ADMIN" } },
+      select: { id: true, name: true, email: true },
+    });
+
+    if (!admin) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No admin found" });
+    }
+
+    res.status(200).json({ success: true, data: admin });
+  } catch (error) {
+    next(error);
+  }
+};

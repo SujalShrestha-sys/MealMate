@@ -77,7 +77,7 @@ export const createOrder = async (req, res) => {
       include: { items: true },
     });
 
-    // Create payment
+    /*  // Create payment
     const payment = await prisma.payment.create({
       data: {
         orderId: order.id,
@@ -86,6 +86,19 @@ export const createOrder = async (req, res) => {
         status: method === "CASH" ? "COMPLETED" : "PENDING",
       },
     });
+ */
+
+    let payment = null;
+    if (method === "CASH") {
+      payment = await prisma.payment.create({
+        data: {
+          orderId: order.id,
+          method: "CASH",
+          amount: total,
+          status: "COMPLETED",
+        },
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -95,7 +108,7 @@ export const createOrder = async (req, res) => {
           : "Order placed. Complete Khalti payment.",
       data: {
         order,
-        payment,
+        /*  payment, */
       },
     });
   } catch (err) {
