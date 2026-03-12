@@ -2,7 +2,7 @@ const errorHandling = (err, req, res, next) => {
   console.error("Error:", err);
   return res.status(500).json({
     success: false,
-    message: "An unexpected error occured!",
+    message: "An unexpected error occurred!",
     error: err.message,
   });
 };

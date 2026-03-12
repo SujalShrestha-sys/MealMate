@@ -1,13 +1,15 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-/**
- * Sends a password reset email with a reset link.
- * @param {string} to - Recipient email address
- * @param {string} resetURL - The full password reset URL
- */
 export const sendPasswordResetEmail = async (to, resetURL) => {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.warn("Skipping email: RESEND_API_KEY is not defined.");
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+
   const { data, error } = await resend.emails.send({
     from: "MealMate <onboarding@resend.dev>",
     to,
