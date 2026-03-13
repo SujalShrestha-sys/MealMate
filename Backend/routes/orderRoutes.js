@@ -18,10 +18,8 @@ const router = express.Router();
 router.post("/create", AuthenticateToken, createOrder);
 router.delete("/:orderId/cancel", AuthenticateToken, cancelOrder);
 
-// Get user's own orders
 router.get("/user/:userId", AuthenticateToken, getOrdersByUser);
 
-// Admin only routes
 router.get(
   "/",
   AuthenticateToken,

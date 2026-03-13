@@ -17,7 +17,7 @@ import {
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
- 
+
 // Public routes
 router.get("/", getPlan);
 
@@ -31,8 +31,13 @@ router.delete("/:subscriptionId/cancel", AuthenticateToken, cancelSubscription);
 router.post("/create", AuthenticateToken, AuthorizeRoles("ADMIN"), createPlan);
 router.put("/:planId", AuthenticateToken, AuthorizeRoles("ADMIN"), updatePlan);
 
-// Generic routes 
+// Generic routes
 router.get("/:planId", getPlanById);
-router.delete("/:planId", AuthenticateToken, AuthorizeRoles("ADMIN"), deletePlan);
+router.delete(
+  "/:planId",
+  AuthenticateToken,
+  AuthorizeRoles("ADMIN"),
+  deletePlan,
+);
 
 export default router;

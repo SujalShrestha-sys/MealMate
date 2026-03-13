@@ -20,7 +20,7 @@ router.post(
   "/",
   AuthenticateToken,
   AuthorizeRoles(["admin"]),
-  createNotification
+  createNotification,
 );
 
 // Get user notifications

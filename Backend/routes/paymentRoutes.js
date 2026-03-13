@@ -23,7 +23,7 @@ router.put(
   "/:paymentId/status",
   AuthenticateToken,
   AuthorizeRoles("ADMIN"),
-  updatePaymentStatus
+  updatePaymentStatus,
 );
 
 // Get all payments (admin only)

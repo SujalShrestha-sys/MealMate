@@ -68,6 +68,11 @@ export const createPickupSlot = async (req, res) => {
 export const getPickupSlots = async (req, res) => {
   try {
     const pickupSlots = await prisma.pickupSlot.findMany({
+      where: {
+        endTime: {
+          gt: new Date(),
+        },
+      },
       orderBy: { startTime: "asc" },
     });
 

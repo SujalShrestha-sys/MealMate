@@ -1,4 +1,3 @@
-import { type } from "os";
 import prisma from "../db/dbConfig.js";
 
 export const createOrder = async (req, res) => {
@@ -24,7 +23,6 @@ export const createOrder = async (req, res) => {
     // Check slot availability
     const slot = await prisma.pickupSlot.findUnique({
       where: { id: pickupSlotId },
-      include: { orders: true },
     });
 
     if (!slot)
@@ -39,7 +37,7 @@ export const createOrder = async (req, res) => {
         message: "Slot expired",
       });
 
-    if (slot.orders.length >= slot.maxOrders)
+    if (slot.maxOrders <= 0)
       return res.status(400).json({
         success: false,
         message: "Slot full",
@@ -78,6 +76,16 @@ export const createOrder = async (req, res) => {
       include: { items: true },
     });
 
+    // Decrease slot capacity
+    await prisma.pickupSlot.update({
+      where: { id: pickupSlotId },
+      data: {
+        maxOrders: {
+          decrement: 1,
+        },
+      },
+    });
+
     const notificationId = order.id.slice(-6).toUpperCase();
 
     let notificationTitle = `New Order #${notificationId}`;
@@ -94,7 +102,6 @@ export const createOrder = async (req, res) => {
         userId: order.userId,
         title: notificationTitle,
         message: notificationMessage,
-    /*     type: "ORDER_PLACEMENT", */
       },
     });
 
