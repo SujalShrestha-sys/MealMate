@@ -16,7 +16,7 @@ export const initiatePayment = async (req, res) => {
 
     // Validate input
     if (!orderId || !method) {
-      console.warn(`[Payment] Missing orderId or method from user ${userId}`);
+      console.warn(`Payment Missing orderId or method from user ${userId}`);
       return res.status(400).json({
         success: false,
         message: "Order ID and payment method required",
@@ -44,7 +44,7 @@ export const initiatePayment = async (req, res) => {
       // SECURITY: Verify user owns this order
       if (order.userId !== userId) {
         console.error(
-          `[Payment] Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`,
+          `Payment Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`,
         );
         return res.status(403).json({
           success: false,
@@ -55,7 +55,7 @@ export const initiatePayment = async (req, res) => {
       // Validate amount is positive
       if (!order.totalAmount || order.totalAmount <= 0) {
         console.warn(
-          `[Payment] Invalid order amount: ${order.totalAmount} for order ${orderId}`,
+          `Payment Invalid order amount: ${order.totalAmount} for order ${orderId}`,
         );
         return res.status(400).json({
           success: false,
@@ -69,7 +69,7 @@ export const initiatePayment = async (req, res) => {
       });
 
       if (existingPayment) {
-        console.warn(`[Payment] Payment already exists for order ${orderId}`);
+        console.warn(`Payment Payment already exists for order ${orderId}`);
         return res.status(400).json({
           success: false,
           message: "Payment already exists for this order",

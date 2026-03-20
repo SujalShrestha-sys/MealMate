@@ -18,6 +18,7 @@ import pickupSlotRoutes from "../routes/pickupslotRoutes.js";
 import userRoutes from "../routes/userRoutes.js";
 import cartRoutes from "../routes/addToCartRoutes.js";
 import notificationRoutes from "../routes/notificationRoutes.js";
+import adminRoutes from "../routes/adminRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -125,6 +126,7 @@ app.use("/api/dishes", dishesRouter);
 app.use("/api/plans", subscriptionPlanRouter);
 app.use("/api/cart", cartRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/admin/inventory", inventoryRoutes);
 app.use("/api/admin/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
