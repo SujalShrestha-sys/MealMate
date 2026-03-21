@@ -5,6 +5,7 @@ import {
   updateUser,
   deleteUser,
   getAdminUser,
+  getAllRoles
 } from "../controller/userController.js";
 import {
   AuthenticateToken,
@@ -13,8 +14,11 @@ import {
 
 const router = express.Router();
 
+// Get all roles (admin only)
+router.get("/roles", AuthenticateToken, AuthorizeRoles("ADMIN"), getAllRoles);
+
 // Get all users (admin only)
-router.get("/", AuthenticateToken, AuthorizeRoles(["admin"]), getAllUsers);
+router.get("/", AuthenticateToken, AuthorizeRoles("ADMIN"), getAllUsers);
 
 // Get admin user details for chat (admin only)
 router.get("/admin", AuthenticateToken, getAdminUser);
@@ -26,6 +30,6 @@ router.get("/:id", AuthenticateToken, getUserById);
 router.put("/:id", AuthenticateToken, updateUser);
 
 // Delete user (admin only)
-router.delete("/:id", AuthenticateToken, AuthorizeRoles(["admin"]), deleteUser);
+router.delete("/:id", AuthenticateToken, AuthorizeRoles("ADMIN"), deleteUser);
 
 export default router;

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
- // output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -24,7 +24,7 @@ model User {
   refreshTokens RefreshToken[]
   role          Role?                @relation(fields: [roleId], references: [id])
   subscriptions UserSubscription[]
-  conversations Conversation[] @relation("ConversationParticipants")
+  conversations Conversation[]       @relation("ConversationParticipants")
 }
 
 model Role {
@@ -39,7 +39,7 @@ model RefreshToken {
   createdAt DateTime @default(now())
   expiresAt DateTime
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordResetToken {
@@ -48,13 +48,13 @@ model PasswordResetToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Cart {
   id     String     @id @default(uuid())
   userId String     @unique
-  user   User       @relation(fields: [userId], references: [id])
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items  CartItem[]
 }
 
@@ -103,7 +103,7 @@ model Feedback {
   userId    String
   dishId    String
   dish      Dish     @relation(fields: [dishId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DishIngredient {
@@ -145,7 +145,7 @@ model Order {
   userId       String
   pickupSlotId String
   pickupSlot   PickupSlot  @relation(fields: [pickupSlotId], references: [id])
-  user         User        @relation(fields: [userId], references: [id])
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items        OrderItem[]
   payment      Payment?
 }
@@ -163,7 +163,7 @@ model OrderItem {
 model PickupSlot {
   id        String   @id @default(uuid())
   startTime DateTime @default(now())
-  endTime   DateTime 
+  endTime   DateTime
   updatedAt DateTime @default(now()) @updatedAt
   maxOrders Int
   orders    Order[]
@@ -181,14 +181,14 @@ enum PaymentStatus {
 }
 
 model Payment {
-  id                   String   @id @default(uuid())
+  id                   String        @id @default(uuid())
   method               PaymentMethod
   amount               Float
   status               PaymentStatus @default(PENDING)
   transactionReference String?
   paidAt               DateTime?
-  orderId              String   @unique
-  order                Order    @relation(fields: [orderId], references: [id])
+  orderId              String        @unique
+  order                Order         @relation(fields: [orderId], references: [id])
 }
 
 model Notification {
@@ -198,7 +198,7 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SubscriptionPlan {
@@ -226,7 +226,7 @@ model UserSubscription {
   userId    String
   planId    String
   plan      SubscriptionPlan @relation(fields: [planId], references: [id])
-  user      User             @relation(fields: [userId], references: [id])
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
@@ -253,5 +253,5 @@ model Message {
   conversationId String
   senderId       String
   conversation   Conversation @relation(fields: [conversationId], references: [id])
-  sender         User         @relation(fields: [senderId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }

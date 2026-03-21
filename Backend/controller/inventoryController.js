@@ -205,6 +205,7 @@ export const updateInventoryItem = async (req, res) => {
       data: updated,
     });
   } catch (error) {
+    console.error(error.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

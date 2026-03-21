@@ -6,7 +6,7 @@ import { hashedPassword } from "../utils/bcrypt.js";
 
 const createDefaultRoles = async () => {
   try {
-    const roles = ["ADMIN", "STUDENT"];
+    const roles = ["ADMIN", "TEACHER", "STUDENT"];
 
     for (const roleName of roles) {
       const existingRole = await prisma.role.findUnique({

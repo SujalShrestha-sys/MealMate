@@ -32,7 +32,7 @@ export const getUserById = async (req, res) => {
     const userRole = req.user?.role;
 
     // Check authorization: user can only view own profile, admins can view any
-    if (userId !== id && userRole !== "admin") {
+    if (userId !== id && userRole?.toUpperCase() !== "ADMIN") {
       return res.status(403).json({
         success: false,
         message: "Not authorized to view this user",
@@ -75,7 +75,7 @@ export const updateUser = async (req, res) => {
     const { name, email, roleId } = req.body;
 
     // Check authorization: user can only update own profile, admins can update any
-    if (userId !== id && userRole !== "admin") {
+    if (userId !== id && userRole?.toUpperCase() !== "ADMIN") {
       return res.status(403).json({
         success: false,
         message: "Not authorized to update this user",
@@ -117,7 +117,7 @@ export const updateUser = async (req, res) => {
     }
 
     // Prevent non-admin users from changing roleId
-    if (roleId && userRole !== "admin") {
+    if (roleId && userRole?.toUpperCase() !== "ADMIN") {
       return res.status(403).json({
         success: false,
         message: "Only admins can change user roles",
@@ -127,7 +127,8 @@ export const updateUser = async (req, res) => {
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (roleId && userRole === "admin") updateData.roleId = roleId;
+    if (roleId && userRole?.toUpperCase() === "ADMIN")
+      updateData.roleId = roleId;
 
     const user = await prisma.user.update({
       where: { id },
@@ -205,5 +206,25 @@ export const getAdminUser = async (req, res, next) => {
     res.status(200).json({ success: true, data: admin });
   } catch (error) {
     next(error);
+  }
+};
+
+// GET ALL ROLES (Admin)
+export const getAllRoles = async (req, res) => {
+  try {
+    const roles = await prisma.role.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: roles,
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch roles",
+    });
   }
 };
