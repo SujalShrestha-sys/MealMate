@@ -5,7 +5,8 @@ import {
   updateUser,
   deleteUser,
   getAdminUser,
-  getAllRoles
+  getAllRoles,
+  createUser
 } from "../controller/userController.js";
 import {
   AuthenticateToken,
@@ -19,6 +20,9 @@ router.get("/roles", AuthenticateToken, AuthorizeRoles("ADMIN"), getAllRoles);
 
 // Get all users (admin only)
 router.get("/", AuthenticateToken, AuthorizeRoles("ADMIN"), getAllUsers);
+
+// Create user (admin only)
+router.post("/", AuthenticateToken, AuthorizeRoles("ADMIN"), createUser);
 
 // Get admin user details for chat (admin only)
 router.get("/admin", AuthenticateToken, getAdminUser);

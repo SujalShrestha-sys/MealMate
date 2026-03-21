@@ -1,4 +1,5 @@
 import prisma from "../db/dbConfig.js";
+import { hashedPassword } from "../utils/bcrypt.js";
 
 // GET ALL USERS (Admin)
 export const getAllUsers = async (req, res) => {
@@ -225,6 +226,72 @@ export const getAllRoles = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch roles",
+    });
+  }
+};
+
+// CREATE USER (Admin only)
+export const createUser = async (req, res) => {
+  try {
+    const { name, email, password, roleId } = req.body;
+
+    // Input validation
+    if (!name || !email || !password || !roleId) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields (name, email, password, roleId) are required",
+      });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use",
+      });
+    }
+
+    // Hash password
+    const hashedPass = await hashedPassword(password);
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPass,
+        roleId,
+      },
+      include: { role: true },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "User account created successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Create User Error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create user account",
     });
   }
 };

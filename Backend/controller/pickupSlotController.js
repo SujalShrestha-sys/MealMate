@@ -28,10 +28,13 @@ export const createPickupSlot = async (req, res) => {
       });
     }
 
-    if (startTimeObj < new Date()) {
+    // Allow same-day creation even if just slightly in the past (e.g. 5 mins ago)
+    const now = new Date();
+    const bufferTime = new Date(now.getTime() - 1000 * 60 * 30); // 30 min buffer
+    if (startTimeObj < bufferTime) {
       return res.status(400).json({
         success: false,
-        message: "Cannot create a pickup slot in the past",
+        message: "Cannot create a pickup slot in the deep past",
       });
     }
 
@@ -68,11 +71,6 @@ export const createPickupSlot = async (req, res) => {
 export const getPickupSlots = async (req, res) => {
   try {
     const pickupSlots = await prisma.pickupSlot.findMany({
-      where: {
-        endTime: {
-          gt: new Date(),
-        },
-      },
       orderBy: { startTime: "asc" },
     });
 
