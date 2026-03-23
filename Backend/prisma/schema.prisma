@@ -172,6 +172,7 @@ model PickupSlot {
 enum PaymentMethod {
   CASH
   KHALTI
+  SUBSCRIPTION
 }
 
 enum PaymentStatus {
@@ -187,8 +188,10 @@ model Payment {
   status               PaymentStatus @default(PENDING)
   transactionReference String?
   paidAt               DateTime?
-  orderId              String        @unique
-  order                Order         @relation(fields: [orderId], references: [id])
+  orderId              String?       @unique
+  order                Order?        @relation(fields: [orderId], references: [id])
+  subscriptionId       String?       @unique
+  subscription         UserSubscription? @relation(fields: [subscriptionId], references: [id])
 }
 
 model Notification {
@@ -223,10 +226,12 @@ model UserSubscription {
   endDate   DateTime
   status    String
   createdAt DateTime         @default(now())
-  userId    String
-  planId    String
-  plan      SubscriptionPlan @relation(fields: [planId], references: [id])
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  planId         String
+  remainingMeals Int              @default(0)
+  plan           SubscriptionPlan @relation(fields: [planId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment        Payment?
 }
 
 model Category {

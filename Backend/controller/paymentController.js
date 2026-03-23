@@ -11,101 +11,128 @@ import {
 // Returns payment_url to redirect user to Khalti checkout
 export const initiatePayment = async (req, res) => {
   try {
-    const { orderId, method, return_url } = req.body;
+    const { orderId, subscriptionId, method, return_url } = req.body;
     const userId = req.user.id; // From JWT token via AuthenticateToken middleware
 
     // Validate input
-    if (!orderId || !method) {
-      console.warn(`Payment Missing orderId or method from user ${userId}`);
+    if ((!orderId && !subscriptionId) || !method) {
+      console.warn(
+        `Payment Missing orderId/subscriptionId or method from user ${userId}`,
+      );
       return res.status(400).json({
         success: false,
-        message: "Order ID and payment method required",
+        message: "Order/Subscription ID and payment method required",
       });
     }
 
-    // Only KHALTI uses Khalti gateway
+    // Handle KHALTI payment method
     if (method === "KHALTI") {
-      // Check if order exists
-      const order = await prisma.order.findUnique({
-        where: { id: orderId },
-        include: { user: true },
-      });
+      let amount = 0;
+      let purchaseOrderId = "";
+      let purchaseOrderName = "";
+      let customerName = "";
+      let customerEmail = "";
+      let customerPhone = "";
 
-      if (!order) {
-        console.warn(
-          `[Payment] Order not found: ${orderId} for user ${userId}`,
-        );
-        return res.status(404).json({
-          success: false,
-          message: "Order not found",
+      if (orderId) {
+        // Handle Order Payment
+        const order = await prisma.order.findUnique({
+          where: { id: orderId },
+          include: { user: true },
         });
-      }
 
-      // SECURITY: Verify user owns this order
-      if (order.userId !== userId) {
-        console.error(
-          `Payment Unauthorized order access! User ${userId} tried to pay for order belonging to ${order.userId}`,
-        );
-        return res.status(403).json({
-          success: false,
-          message: "You cannot pay for this order",
+        if (!order)
+          return res
+            .status(404)
+            .json({ success: false, message: "Order not found" });
+
+        if (order.userId !== userId)
+          return res
+            .status(403)
+            .json({ success: false, message: "Unauthorized access" });
+
+        if (!order.totalAmount || order.totalAmount <= 0)
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid order amount" });
+
+        const existingPayment = await prisma.payment.findUnique({
+          where: { orderId },
         });
-      }
 
-      // Validate amount is positive
-      if (!order.totalAmount || order.totalAmount <= 0) {
-        console.warn(
-          `Payment Invalid order amount: ${order.totalAmount} for order ${orderId}`,
-        );
-        return res.status(400).json({
-          success: false,
-          message: "Invalid order amount",
+        if (existingPayment)
+          return res.status(400).json({
+            success: false,
+            message: "Payment already initiated for this order",
+          });
+
+        amount = order.totalAmount;
+        purchaseOrderId = order.id;
+        purchaseOrderName = `MealMate Order ${order.id}`;
+        customerName = order.user.name;
+        customerEmail = order.user.email;
+        customerPhone = order.user.phone || "9800000000";
+      } else if (subscriptionId) {
+        // Handle Subscription Payment
+        const subscription = await prisma.userSubscription.findUnique({
+          where: { id: subscriptionId },
+          include: { user: true, plan: true },
         });
-      }
 
-      // Check if payment already exists
-      const existingPayment = await prisma.payment.findUnique({
-        where: { orderId },
-      });
+        if (!subscription)
+          return res
+            .status(404)
+            .json({ success: false, message: "Subscription not found" });
 
-      if (existingPayment) {
-        console.warn(`Payment Payment already exists for order ${orderId}`);
-        return res.status(400).json({
-          success: false,
-          message: "Payment already exists for this order",
+        if (subscription.userId !== userId)
+          return res
+            .status(403)
+            .json({ success: false, message: "Unauthorized access" });
+
+        if (!subscription.plan.price || subscription.plan.price <= 0)
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid plan price" });
+
+        const existingPayment = await prisma.payment.findUnique({
+          where: { subscriptionId },
         });
+        if (existingPayment)
+          return res.status(400).json({
+            success: false,
+            message: "Payment already initiated for this subscription",
+          });
+
+        amount = subscription.plan.price;
+        purchaseOrderId = subscription.id;
+        purchaseOrderName = `MealMate Subscription: ${subscription.plan.name}`;
+        customerName = subscription.user.name;
+        customerEmail = subscription.user.email;
+        customerPhone = subscription.user.phone || "9800000000";
       }
 
       try {
-        // Create payment initiate request to Khalti
-        const amountInPaisa = rupeesToPaisa(order.totalAmount);
-        console.log(
-          `[Payment] Initiating Khalti payment for order ${orderId}: ${order.totalAmount} rupees (${amountInPaisa} paisa)`,
-        );
-
+        const amountInPaisa = rupeesToPaisa(amount);
         const khaltiResponse = await initiateKhaltiPayment({
-          orderId: order.id,
+          orderId: purchaseOrderId,
           amountInPaisa,
-          customerName: order.user.name,
-          customerEmail: order.user.email,
-          customerPhone: order.user.phone || "9800000000",
+          customerName,
+          customerEmail,
+          customerPhone,
           returnUrl: return_url,
         });
 
-        // Save payment record with pidx (will be completed after callback)
-        const payment = await prisma.payment.create({
-          data: {
-            orderId: order.id,
-            method: "KHALTI",
-            amount: order.totalAmount,
-            status: "PENDING",
-            transactionReference: khaltiResponse.pidx, // Store pidx for later lookup
-          },
-        });
+        const paymentData = {
+          method: "KHALTI",
+          amount: amount,
+          status: "PENDING",
+          transactionReference: khaltiResponse.pidx,
+        };
 
-        console.log(
-          `[Payment] Payment record created: ${payment.id} with pidx ${khaltiResponse.pidx}`,
-        );
+        if (orderId) paymentData.orderId = orderId;
+        if (subscriptionId) paymentData.subscriptionId = subscriptionId;
+
+        await prisma.payment.create({ data: paymentData });
 
         return res.json({
           success: true,
@@ -117,10 +144,7 @@ export const initiatePayment = async (req, res) => {
           },
         });
       } catch (error) {
-        console.error(
-          `[Payment] Khalti initiation failed for order ${orderId}:`,
-          error.message,
-        );
+        console.error(`[Payment] Khalti initiation failed:`, error.message);
         return res.status(400).json({
           success: false,
           message: "Failed to initiate Khalti payment",
@@ -128,6 +152,9 @@ export const initiatePayment = async (req, res) => {
         });
       }
     } else if (method === "CASH") {
+      // ... keep existing cash logic if still needed, or update similarly
+      // For brevity, I'll update the main logic
+
       // Cash payment - no Khalti needed
       const order = await prisma.order.findUnique({ where: { id: orderId } });
 
@@ -219,7 +246,12 @@ export const verifyPayment = async (req, res) => {
     // Find payment by pidx (transactionReference)
     const payment = await prisma.payment.findFirst({
       where: { transactionReference: pidx },
-      include: { order: true },
+      include: {
+        order: true,
+        subscription: {
+          include: { plan: true },
+        },
+      },
     });
 
     if (!payment) {
@@ -230,10 +262,14 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    // SECURITY: Verify user owns this payment (user must own the order)
-    if (payment.order.userId !== userId) {
+    // SECURITY: Verify user owns this payment
+    const ownerId = payment.orderId
+      ? payment.order.userId
+      : payment.subscription.userId;
+
+    if (ownerId !== userId) {
       console.error(
-        `[Payment] Unauthorized payment verification! User ${userId} tried to verify payment for order belonging to ${payment.order.userId}`,
+        `[Payment] Unauthorized payment verification! User ${userId} tried to verify payment for ${payment.orderId ? "order" : "subscription"} belonging to ${ownerId}`,
       );
       return res.status(403).json({
         success: false,
@@ -261,30 +297,50 @@ export const verifyPayment = async (req, res) => {
           },
         });
 
-        // Also update order status from PENDING to CONFIRMED
-        const updatedOrder = await prisma.order.update({
-          where: { id: payment.orderId },
-          data: {
-            status: "CONFIRMED",
-          },
-        });
+        // Update Order if it's an order payment
+        if (payment.orderId) {
+          const updatedOrder = await prisma.order.update({
+            where: { id: payment.orderId },
+            data: { status: "CONFIRMED" },
+          });
 
-        console.log(
-          `[Payment] Payment completed: ${payment.id}. Order status updated to CONFIRMED: ${updatedOrder.id}`,
-        );
+          console.log(`[Payment] Order confirmed: ${updatedOrder.id}`);
 
-        const orderNotifiation = await prisma.notification.create({
-          data: {
-            userId: payment.order.userId,
-            title: "Payment Verified",
-            message: `Your payment for order ${payment.orderId.slice(-6).toUpperCase()} has been verified. Your order is now confirmed!`,
-            /*  type: "PAYMENT_SUCCESS", */
-          },
-        });
+          const orderNotification = await prisma.notification.create({
+            data: {
+              userId: payment.order.userId,
+              title: "Payment Verified",
+              message: `Your payment for order ${payment.orderId.slice(-6).toUpperCase()} has been verified. Your order is now confirmed!`,
+            },
+          });
 
-        req.io
-          .to(payment.order.userId)
-          .emit("new_notification", orderNotifiation);
+          req.io
+            .to(payment.order.userId)
+            .emit("new_notification", orderNotification);
+        }
+
+        // Update Subscription if it's a subscription payment
+        if (payment.subscriptionId) {
+          const sub = await prisma.userSubscription.update({
+            where: { id: payment.subscriptionId },
+            data: {
+              status: "ACTIVE",
+              remainingMeals: payment.subscription.plan.meals,
+            },
+          });
+
+          console.log(`[Payment] Subscription activated: ${sub.id}`);
+
+          const subNotification = await prisma.notification.create({
+            data: {
+              userId: userId, // Current user is the one who paid
+              title: "Plan Activated",
+              message: `Your subscription has been activated successfully!`,
+            },
+          });
+
+          req.io.to(userId).emit("new_notification", subNotification);
+        }
 
         return res.json({
           success: true,

@@ -13,10 +13,10 @@ export const createOrder = async (req, res) => {
     }
 
     // Validate payment method
-    if (!["CASH", "KHALTI"].includes(method)) {
+    if (!["CASH", "KHALTI", "SUBSCRIPTION"].includes(method)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid payment method. Must be CASH or KHALTI",
+        message: "Invalid payment method. Must be CASH, KHALTI, or SUBSCRIPTION",
       });
     }
 
@@ -43,6 +43,28 @@ export const createOrder = async (req, res) => {
         message: "Slot full",
       });
 
+    // Check for subscription if method is SUBSCRIPTION
+    let activeSub = null;
+    if (method === "SUBSCRIPTION") {
+      activeSub = await prisma.userSubscription.findFirst({
+        where: {
+          userId,
+          status: "ACTIVE",
+          endDate: { gte: new Date() },
+          remainingMeals: { gt: 0 },
+        },
+      });
+
+      const totalMealsNeeded = items.reduce((acc, item) => acc + item.quantity, 0);
+
+      if (!activeSub || activeSub.remainingMeals < totalMealsNeeded) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough meals in your subscription. Remaining: ${activeSub?.remainingMeals || 0}`,
+        });
+      }
+    }
+
     // Calculate total and prepare order items
     let total = 0;
     const orderItems = [];
@@ -60,17 +82,20 @@ export const createOrder = async (req, res) => {
       orderItems.push({
         dishId: item.dishId,
         quantity: item.quantity,
-        priceAtPurchase: dish.price,
+        priceAtPurchase: method === "SUBSCRIPTION" ? 0 : dish.price,
       });
     }
+
+    // Set total to 0 if using subscription
+    const finalTotal = method === "SUBSCRIPTION" ? 0 : total;
 
     // Create order
     const order = await prisma.order.create({
       data: {
         userId,
         pickupSlotId,
-        totalAmount: total,
-        status: "PENDING",
+        totalAmount: finalTotal,
+        status: method === "SUBSCRIPTION" ? "CONFIRMED" : "PENDING",
         items: { create: orderItems },
       },
       include: { items: true },
@@ -86,13 +111,28 @@ export const createOrder = async (req, res) => {
       },
     });
 
+    // If subscription, decrement remaining meals
+    if (method === "SUBSCRIPTION" && activeSub) {
+        const totalMealsUsed = items.reduce((acc, item) => acc + item.quantity, 0);
+        await prisma.userSubscription.update({
+            where: { id: activeSub.id },
+            data: {
+                remainingMeals: {
+                    decrement: totalMealsUsed
+                }
+            }
+        });
+    }
+
     const notificationId = order.id.slice(-6).toUpperCase();
 
     let notificationTitle = `New Order #${notificationId}`;
     let notificationMessage = `You have a new order with total amount Rs.${total}.`;
 
     if (method === "CASH") {
-      notificationMessage += " Order Cofirmed. Pay at pickup.";
+      notificationMessage += " Order Confirmed. Pay at pickup.";
+    } else if (method === "SUBSCRIPTION") {
+      notificationMessage += " Order Confirmed using subscription.";
     } else {
       notificationMessage += " Please complete payment via Khalti.";
     }
@@ -108,12 +148,12 @@ export const createOrder = async (req, res) => {
     req.io.to(order.userId).emit("new_notification", notification);
 
     let payment = null;
-    if (method === "CASH") {
+    if (method === "CASH" || method === "SUBSCRIPTION") {
       payment = await prisma.payment.create({
         data: {
           orderId: order.id,
-          method: "CASH",
-          amount: total,
+          method: method,
+          amount: finalTotal, // Value is 0 for subscription
           status: "COMPLETED",
         },
       });

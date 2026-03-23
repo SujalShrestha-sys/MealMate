@@ -387,10 +387,19 @@ export const purchasePlan = async (req, res) => {
       });
     }
 
-    // Create subscription
+    // Clear any previous PENDING_PAYMENT subscriptions for this user
+    await prisma.userSubscription.deleteMany({
+      where: {
+        userId,
+        status: "PENDING_PAYMENT",
+      },
+    });
+
+    // Calculate start and end dates
     const startDate = new Date();
+
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + plan.durationDays);
+    endDate.setDate(startDate.getDate() + plan.durationDays);
 
     const subscription = await prisma.userSubscription.create({
       data: {
@@ -398,7 +407,7 @@ export const purchasePlan = async (req, res) => {
         planId,
         startDate,
         endDate,
-        status: "ACTIVE",
+        status: "PENDING_PAYMENT",
       },
       include: {
         plan: true,
@@ -414,7 +423,7 @@ export const purchasePlan = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Subscription activated successfully",
+      message: "Subscription initiated. Please complete payment.",
       data: subscription,
     });
   } catch (error) {
@@ -444,10 +453,13 @@ export const getUserSubscription = async (req, res) => {
     const subscription = await prisma.userSubscription.findFirst({
       where: {
         userId,
-        status: "ACTIVE",
+        status: { in: ["ACTIVE", "PENDING_PAYMENT"] },
       },
       include: {
         plan: true,
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
@@ -569,6 +581,79 @@ export const getSubscriptionHistory = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching subscription history",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get all subscriptions (Admin only)
+ */
+export const getAllSubscriptions = async (req, res) => {
+  try {
+    const subscriptions = await prisma.userSubscription.findMany({
+      include: {
+        plan: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        payment: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      count: subscriptions.length,
+      data: subscriptions,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching all subscriptions",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Cancel a user's subscription (Admin only)
+ */
+export const cancelSubscriptionAdmin = async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+
+    if (!subscriptionId) {
+      return res.status(400).json({
+        success: false,
+        message: "Subscription ID is required",
+      });
+    }
+
+    const subscription = await prisma.userSubscription.update({
+      where: { id: subscriptionId },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Subscription cancelled by admin",
+      data: subscription,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error cancelling subscription",
       error: error.message,
     });
   }
