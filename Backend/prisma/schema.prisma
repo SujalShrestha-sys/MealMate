@@ -144,7 +144,7 @@ model Order {
   createdAt    DateTime    @default(now())
   userId       String
   pickupSlotId String
-  pickupSlot   PickupSlot  @relation(fields: [pickupSlotId], references: [id])
+  pickupSlot   PickupSlot  @relation(fields: [pickupSlotId], references: [id], onDelete: Cascade)
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items        OrderItem[]
   payment      Payment?
