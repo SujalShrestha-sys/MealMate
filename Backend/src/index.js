@@ -23,33 +23,55 @@ import adminRoutes from "../routes/adminRoutes.js";
 const app = express();
 const httpServer = createServer(app);
 
-// Dynamic CORS configuration
-const getAllowedOrigins = () => {
-  const envOrigins = process.env.FRONTEND_URL
-    ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
-    : [];
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://meal-mate-frontend-rho.vercel.app",
+];
 
-  const defaultOrigins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:5000",
-    "http://localhost:5001",
-  ];
-
-  // Merge env origins with defaults, ensuring no duplicates and filtering out empty strings
-  return [...new Set([...defaultOrigins, ...envOrigins])].filter(Boolean);
-};
+if (process.env.FRONTEND_URL) {
+  const envOrigins = process.env.FRONTEND_URL.split(",").map((u) =>
+    u.trim().replace(/\/$/, ""),
+  );
+  envOrigins.forEach((origin) => {
+    if (!allowedOrigins.includes(origin)) {
+      allowedOrigins.push(origin);
+    }
+  });
+}
 
 const corsOptions = {
-  origin: getAllowedOrigins(),
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.some(
+      (allowed) =>
+        allowed.toLowerCase() === origin.toLowerCase() ||
+        allowed.toLowerCase() === origin.replace(/\/$/, "").toLowerCase(),
+    );
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
+      callback(null, false);
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  optionsSuccessStatus: 200,
 };
 
 const io = new Server(httpServer, {
   cors: corsOptions,
-  transports: ["websocket", "polling"],
 });
 
 const PORT = process.env.PORT || 5001;
@@ -155,7 +177,7 @@ async function startServer() {
       console.log(
         `Server running on port ${PORT} in ${process.env.NODE_ENV} mode`,
       );
-      console.log(`Allowed origins:`, getAllowedOrigins());
+      console.log(`Allowed origins:`, allowedOrigins);
     });
   } catch (error) {
     console.error("Database connection failed:", error.message);

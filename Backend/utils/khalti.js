@@ -6,7 +6,9 @@ const KHALTI_LIVE_URL = "https://khalti.com/api/v2";
 
 // Use sandbox for development, live for production
 const KHALTI_API_URL =
-  process.env.NODE_ENV === "production" ? KHALTI_LIVE_URL : KHALTI_SANDBOX_URL;
+  process.env.NODE_ENV === "production"
+    ? KHALTI_SANDBOX_URL
+    : KHALTI_SANDBOX_URL;
 const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY;
 
 // Initiate Khalti Payment (Step 1)
@@ -14,9 +16,15 @@ const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY;
 // orderData should have: orderId, amountInPaisa, customerName, customerEmail, customerPhone
 export const initiateKhaltiPayment = async (orderData) => {
   try {
+    // Get the first origin from the list as the primary frontend URL
+    const origins = (process.env.FRONTEND_URL || "http://localhost:5173")
+      .split(",")
+      .map((u) => u.trim().replace(/\/$/, ""));
+    const primaryOrigin = origins[0];
+
     const payload = {
-      return_url: orderData.return_url || `${process.env.FRONTEND_URL}/payment/verify`, // Frontend should handle this route
-      website_url: process.env.FRONTEND_URL,
+      return_url: orderData.returnUrl || `${primaryOrigin}/payment/verify`, // Frontend should handle this route
+      website_url: primaryOrigin,
       amount: orderData.amountInPaisa, // Must be in paisa (rupees * 100)
       purchase_order_id: orderData.orderId,
       purchase_order_name: `MealMate Order ${orderData.orderId}`,
@@ -26,7 +34,6 @@ export const initiateKhaltiPayment = async (orderData) => {
         phone: orderData.customerPhone,
       },
     };
-    
 
     const response = await axios.post(
       `${KHALTI_API_URL}/epayment/initiate/`,
