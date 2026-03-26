@@ -59,7 +59,7 @@ export const RegisterUser = async (req, res) => {
 
 export const LoginUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { email, password } = req.body;
 
     // Validate input
     if ([email, password].some((field) => !field || field.trim() === "")) {

@@ -25,19 +25,19 @@ const httpServer = createServer(app);
 
 // Dynamic CORS configuration
 const getAllowedOrigins = () => {
-  if (process.env.NODE_ENV === "production") {
-    return (
-      process.env.FRONTEND_URL?.split(",") || [
-        "https://mealmate-frontend.onrender.com",
-      ]
-    );
-  }
-  return [
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
+    : [];
+
+  const defaultOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://localhost:5000",
-    process.env.FRONTEND_URL,
-  ].filter(Boolean);
+    "http://localhost:5001",
+  ];
+
+  // Merge env origins with defaults, ensuring no duplicates and filtering out empty strings
+  return [...new Set([...defaultOrigins, ...envOrigins])].filter(Boolean);
 };
 
 const corsOptions = {

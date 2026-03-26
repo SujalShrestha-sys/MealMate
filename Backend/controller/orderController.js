@@ -16,7 +16,8 @@ export const createOrder = async (req, res) => {
     if (!["CASH", "KHALTI", "SUBSCRIPTION"].includes(method)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid payment method. Must be CASH, KHALTI, or SUBSCRIPTION",
+        message:
+          "Invalid payment method. Must be CASH, KHALTI, or SUBSCRIPTION",
       });
     }
 
@@ -55,7 +56,10 @@ export const createOrder = async (req, res) => {
         },
       });
 
-      const totalMealsNeeded = items.reduce((acc, item) => acc + item.quantity, 0);
+      const totalMealsNeeded = items.reduce(
+        (acc, item) => acc + item.quantity,
+        0,
+      );
 
       if (!activeSub || activeSub.remainingMeals < totalMealsNeeded) {
         return res.status(400).json({
@@ -113,15 +117,18 @@ export const createOrder = async (req, res) => {
 
     // If subscription, decrement remaining meals
     if (method === "SUBSCRIPTION" && activeSub) {
-        const totalMealsUsed = items.reduce((acc, item) => acc + item.quantity, 0);
-        await prisma.userSubscription.update({
-            where: { id: activeSub.id },
-            data: {
-                remainingMeals: {
-                    decrement: totalMealsUsed
-                }
-            }
-        });
+      const totalMealsUsed = items.reduce(
+        (acc, item) => acc + item.quantity,
+        0,
+      );
+      await prisma.userSubscription.update({
+        where: { id: activeSub.id },
+        data: {
+          remainingMeals: {
+            decrement: totalMealsUsed,
+          },
+        },
+      });
     }
 
     const notificationId = order.id.slice(-6).toUpperCase();
@@ -171,7 +178,7 @@ export const createOrder = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -188,6 +195,7 @@ export const getAllOrders = async (req, res) => {
         },
         payment: true,
         pickupSlot: true,
+        user: { select: { id: true, name: true, email: true } },
       },
     });
 
