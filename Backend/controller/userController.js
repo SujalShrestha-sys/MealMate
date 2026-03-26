@@ -174,8 +174,14 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    await prisma.user.delete({
-      where: { id },
+    // Wrap the deletion process in a transaction to handle relations correctly
+    await prisma.$transaction(async (tx) => {
+      // With onDelete: Cascade added to schema.prisma for OrderItem, CartItem, and Payment,
+      // we only need to call delete on the User.
+      // (Prisma will also handle Order, Cart, UserSubscription, RefreshToken etc. as they already have Cascade)
+      await tx.user.delete({
+        where: { id },
+      });
     });
 
     res.status(200).json({

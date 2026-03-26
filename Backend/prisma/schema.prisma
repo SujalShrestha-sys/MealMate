@@ -63,7 +63,7 @@ model CartItem {
   quantity Int
   cartId   String
   dishId   String
-  cart     Cart   @relation(fields: [cartId], references: [id])
+  cart     Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
   dish     Dish   @relation(fields: [dishId], references: [id])
 }
 
@@ -156,8 +156,8 @@ model OrderItem {
   priceAtPurchase Float
   orderId         String
   dishId          String
-  dish            Dish   @relation(fields: [dishId], references: [id])
-  order           Order  @relation(fields: [orderId], references: [id])
+  dish            Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  order           Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model PickupSlot {
@@ -189,9 +189,9 @@ model Payment {
   transactionReference String?
   paidAt               DateTime?
   orderId              String?       @unique
-  order                Order?        @relation(fields: [orderId], references: [id])
+  order                Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
   subscriptionId       String?       @unique
-  subscription         UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  subscription         UserSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 }
 
 model Notification {

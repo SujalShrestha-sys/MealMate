@@ -1,14 +1,17 @@
 import axios from "axios";
 
 // Khalti API URLs for Web Checkout (KPG-2)
-const KHALTI_SANDBOX_URL = "https://dev.khalti.com/api/v2";
+const KHALTI_SANDBOX_URL = "https://a.khalti.com/api/v2";
 const KHALTI_LIVE_URL = "https://khalti.com/api/v2";
 
-// Use sandbox for development, live for production
+// Use sandbox for testing, live for production
+// Can be overridden by setting KHALTI_ENVIRONMENT to 'sandbox' or 'live'
+const KHALTI_ENV =
+  process.env.KHALTI_ENVIRONMENT ||
+  (process.env.NODE_ENV === "production" ? "live" : "sandbox");
+
 const KHALTI_API_URL =
-  process.env.NODE_ENV === "production"
-    ? KHALTI_SANDBOX_URL
-    : KHALTI_SANDBOX_URL;
+  KHALTI_ENV === "live" ? KHALTI_LIVE_URL : KHALTI_SANDBOX_URL;
 const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY;
 
 // Initiate Khalti Payment (Step 1)

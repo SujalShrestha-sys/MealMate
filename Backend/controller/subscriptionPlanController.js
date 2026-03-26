@@ -464,8 +464,9 @@ export const getUserSubscription = async (req, res) => {
     });
 
     if (!subscription) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
+        data: null,
         message: "No active subscription found",
       });
     }
