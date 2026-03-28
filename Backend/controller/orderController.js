@@ -200,8 +200,9 @@ export const getAllOrders = async (req, res) => {
     });
 
     if (orders.length === 0) {
-      return res.status(404).json({
-        success: false,
+      return res.json({
+        success: true,
+        data: [],
         message: "No orders found",
       });
     }

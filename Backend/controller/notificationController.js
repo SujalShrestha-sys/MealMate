@@ -59,7 +59,7 @@ export const getUserNotifications = async (req, res) => {
         success: false,
         message: "User not authenticated",
       });
-    }
+    }    
 
     const notifications = await prisma.notification.findMany({
       where: { userId },
