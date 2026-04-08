@@ -22,41 +22,43 @@ import adminRoutes from "../routes/adminRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
+let isDatabaseReady = false;
+let isDatabaseConnecting = false;
 
 // CORS configuration
-const allowedOrigins = [
+const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://localhost:3000",
   "https://meal-mate-frontend-rho.vercel.app",
-];
+]);
 
 if (process.env.FRONTEND_URL) {
   const envOrigins = process.env.FRONTEND_URL.split(",").map((u) =>
     u.trim().replace(/\/$/, ""),
   );
   envOrigins.forEach((origin) => {
-    if (!allowedOrigins.includes(origin)) {
-      allowedOrigins.push(origin);
-    }
+    if (origin) allowedOrigins.add(origin);
   });
 }
+
+const isVercelPreviewOrigin = (origin) =>
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
 
-    const isAllowed = allowedOrigins.some(
-      (allowed) =>
-        allowed.toLowerCase() === origin.toLowerCase() ||
-        allowed.toLowerCase() === origin.replace(/\/$/, "").toLowerCase(),
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    const isAllowed = Array.from(allowedOrigins).some(
+      (allowed) => allowed.toLowerCase() === normalizedOrigin.toLowerCase(),
     );
 
-    if (isAllowed) {
+    if (isAllowed || isVercelPreviewOrigin(normalizedOrigin)) {
       callback(null, true);
     } else {
       console.warn(`[CORS] Blocked request from origin: ${origin}`);
-      callback(null, false);
+      callback(new Error("CORS origin not allowed"));
     }
   },
   credentials: true,
@@ -82,6 +84,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
+
+app.get("/api/health", (req, res) => {
+  return res.status(isDatabaseReady ? 200 : 503).json({
+    success: isDatabaseReady,
+    status: isDatabaseReady ? "ok" : "starting",
+    db: isDatabaseReady ? "connected" : "connecting",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.use("/api", (req, res, next) => {
+  if (req.path === "/health") return next();
+  if (!isDatabaseReady) {
+    return res.status(503).json({
+      success: false,
+      message: "Server is warming up. Please retry in a few seconds.",
+    });
+  }
+  return next();
+});
 
 // Attach io to request
 app.use((req, res, next) => {
@@ -162,8 +184,10 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-// Start server
-async function startServer() {
+async function connectDatabaseWithRetry() {
+  if (isDatabaseReady || isDatabaseConnecting) return;
+  isDatabaseConnecting = true;
+
   try {
     if (!process.env.DATABASE_URL) {
       console.error("DATABASE_URL is missing!");
@@ -171,23 +195,56 @@ async function startServer() {
     }
 
     await prisma.$connect();
+    isDatabaseReady = true;
+    isDatabaseConnecting = false;
     console.log("Database connected successfully");
-
-    httpServer.listen(PORT, "0.0.0.0", () => {
-      console.log(
-        `Server running on port ${PORT} in ${process.env.NODE_ENV} mode`,
-      );
-      console.log(`Allowed origins:`, allowedOrigins);
-    });
   } catch (error) {
+    isDatabaseReady = false;
+    isDatabaseConnecting = false;
     console.error("Database connection failed:", error.message);
-    process.exit(1);
+    setTimeout(connectDatabaseWithRetry, 5000);
   }
+}
+
+// Keep server alive on free-tier hosting (Render sleeps after 15 min)
+// Pings itself every 14 minutes so the server never goes to sleep
+function keepServerAlive() {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const FOURTEEN_MINUTES = 14 * 60 * 1000;
+
+  setInterval(async () => {
+    try {
+      const url = `http://localhost:${PORT}/api/health`;
+      const res = await fetch(url);
+      console.log(
+        `[Keep-Alive] Pinged health endpoint — status: ${res.status}`,
+      );
+    } catch (err) {
+      console.log("[Keep-Alive] Ping failed:", err.message);
+    }
+  }, FOURTEEN_MINUTES);
+
+  console.log("[Keep-Alive] Active — pinging every 14 minutes");
+}
+
+// Start server
+function startServer() {
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(
+      `Server running on port ${PORT} in ${process.env.NODE_ENV} mode`,
+    );
+    console.log("Allowed origins:", Array.from(allowedOrigins));
+    connectDatabaseWithRetry();
+    keepServerAlive();
+  });
 }
 
 // Graceful shutdown
 process.on("SIGINT", async () => {
-  await prisma.$disconnect();
+  if (isDatabaseReady) {
+    await prisma.$disconnect();
+  }
   console.log("Database disconnected");
   process.exit(0);
 });
