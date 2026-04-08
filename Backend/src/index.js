@@ -42,7 +42,7 @@ if (process.env.FRONTEND_URL) {
 }
 
 const isVercelPreviewOrigin = (origin) =>
-  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+  /^https:\/\/[a-z0-9.\-]+\.vercel\.app$/i.test(origin);
 
 const corsOptions = {
   origin: (origin, callback) => {
