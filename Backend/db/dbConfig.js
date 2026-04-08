@@ -16,21 +16,10 @@ if (!global.prisma) {
     process.env.DATABASE_URL.includes("localhost") ||
     process.env.DATABASE_URL.includes("127.0.0.1");
 
-  // Keep pool size simple and configurable:
-  // - use DB_POOL_MAX if provided
-  // - otherwise use a safer default than 2
-  const parsedPoolMax = Number(process.env.DB_POOL_MAX);
-  const poolMax =
-    Number.isInteger(parsedPoolMax) && parsedPoolMax > 0
-      ? parsedPoolMax
-      : process.env.NODE_ENV === "production"
-        ? 10
-        : 5;
-
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: isLocalHost ? false : { rejectUnauthorized: false },
-    max: poolMax,
+    max: 2, // Keep connection pool small in development
   });
 
   const adapter = new PrismaPg(pool);

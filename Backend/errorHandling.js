@@ -1,17 +1,18 @@
 const errorHandling = (err, req, res, next) => {
-  console.error("Error:", err);
+  // Log error to console for the developer
+  console.error("Error found:", err.message);
 
+  // If it's a CORS error
   if (err.message === "CORS origin not allowed") {
     return res.status(403).json({
-      success: false,
-      message: "Request blocked by CORS policy for this origin.",
+      message: "Browser blocked this request (CORS error)."
     });
   }
 
-  return res.status(500).json({
-    success: false,
-    message: "An unexpected error occurred!",
-    error: err.message,
+  // Generic error response
+  res.status(500).json({
+    message: "Something went wrong on the server!",
+    error: err.message
   });
 };
 

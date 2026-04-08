@@ -8,27 +8,9 @@ import { generateResetToken } from "../utils/token.js";
 import { sendPasswordResetEmail } from "../utils/resend.js";
 import crypto from "crypto";
 
-const getRefreshCookieOptions = () => {
-  const isProduction = process.env.NODE_ENV === "production";
-  return {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
-  };
-};
-
-const getPrimaryFrontendUrl = () => {
-  const fallback = "http://localhost:5173";
-  if (!process.env.FRONTEND_URL) return fallback;
-  const first = process.env.FRONTEND_URL.split(",")[0]?.trim();
-  return first || fallback;
-};
-
 export const RegisterUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -56,7 +38,7 @@ export const RegisterUser = async (req, res) => {
         email,
         password: hashedPass,
         role: {
-          connect: { name: (role || "student").toUpperCase() },
+          connect: { name: "STUDENT" },
         },
       },
     });
@@ -114,8 +96,16 @@ export const LoginUser = async (req, res) => {
       user.id,
     );
 
+    console.log("Access Token:", accessToken);
+    console.log("Refresh Token:", refreshToken);
+
     // Set httpOnly cookie for refresh token
-    res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     return res.status(200).json({
       success: true,
@@ -208,7 +198,12 @@ export const RefreshAccessToken = async (req, res) => {
     );
 
     // Set httpOnly cookie
-    res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     return res.status(200).json({
       success: true,
@@ -243,13 +238,7 @@ export const logoutUser = async (req, res) => {
       },
     });
 
-    const cookieOptions = getRefreshCookieOptions();
-    res.clearCookie("refreshToken", {
-      httpOnly: cookieOptions.httpOnly,
-      secure: cookieOptions.secure,
-      sameSite: cookieOptions.sameSite,
-      path: cookieOptions.path,
-    });
+    res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
 
     return res.status(200).json({
       success: true,
@@ -305,7 +294,7 @@ export const ForgetPassword = async (req, res) => {
       },
     });
 
-    const frontendURL = getPrimaryFrontendUrl();
+    const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
     const resetURL = `${frontendURL}/reset-password/${resetToken}`;
 
     // Send the reset link via email
@@ -316,7 +305,7 @@ export const ForgetPassword = async (req, res) => {
       message: "Password reset link has been sent to your email",
     });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Server error",
