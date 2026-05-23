@@ -1,4 +1,4 @@
-# 🍽️ MealMate — Smart Meal Subscription & Ordering Platform
+🍽️ MealMate — Smart Meal Subscription & Ordering Platform
 
 ![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
 ![Express](https://img.shields.io/badge/Framework-Express.js-black)
@@ -12,25 +12,25 @@ The platform helps reduce long queues, improves meal planning, and provides an o
 
 ---
 
-# ✨ Features
+✨ Features
 
-### 🔐 Authentication & Security
+🔐 Authentication & Security
 - Secure **JWT authentication**
 - **Refresh token** management
 - Password reset functionality
 - Role-based user access
 
-### 🍛 Smart Menu System
+🍛 Smart Menu System
 - Browse dishes by **category**
 - **Search dishes** instantly
 - View dish details and availability
 
-### 🛒 Cart & Ordering
+🛒 Cart & Ordering
 - Add/remove dishes from cart
 - Manage quantities easily
 - Place orders smoothly
 
-### 📅 Pickup Slot Scheduling
+📅 Pickup Slot Scheduling
 - Choose **available pickup time slots**
 - Prevent long queues at cafeterias
 - Organized meal distribution
@@ -38,16 +38,16 @@ The platform helps reduce long queues, improves meal planning, and provides an o
 ## 💳 Payment Integration
 MealMate supports **secure digital payments**.
 
-### Supported Gateway
+Supported Gateway
 - 💜 Khalti Digital Wallet
 
-### Payment Features
+Payment Features
 - Secure checkout
 - Payment verification
 - Transaction tracking
 - Payment status management
 
-### 💳 Subscription Plans
+💳 Subscription Plans
 Students can subscribe to **weekly or monthly meal plans**:
 
 - Weekly Veg Delight
@@ -59,48 +59,48 @@ Students can subscribe to **weekly or monthly meal plans**:
 - Monthly Power Pack
 - Monthly Premium
 
-### ⭐ Feedback System
+⭐ Feedback System
 - Rate dishes
 - Leave comments
 - Improve food quality through feedback
 
-### 📦 Inventory Tracking
+📦 Inventory Tracking
 - Track ingredients used in dishes
 - Maintain stock availability
 
-### 🔔 Notifications
+🔔 Notifications
 - Order updates
 - System alerts
 - Subscription notifications
 
-### 💬 Chat System
+💬 Chat System
 - Built-in messaging system
 - Communication with support/admin
 
 ---
 
-# 🧠 Tech Stack
+🧠 Tech Stack
 
-## Frontend
+Frontend
 - ⚛️ React
 - 🎨 Tailwind CSS
 
-## Backend
+Backend
 - 🟢 Node.js
 - 🚀 Express.js
 - 🔗 Prisma ORM
 
-## Database
+Database
 - 🐘 PostgreSQL
 
-## Tools & Utilities
+Tools & Utilities
 - 🔐 JWT Authentication
 - 📡 REST APIs
 - 🐙 Git & GitHub
 
 ---
 
-# 🗂️ Project Structure
+🗂️ Project Structure
 
 MealMate
 │
@@ -122,7 +122,7 @@ MealMate
 
 ---
 
-# 🗄️ Database Design
+🗄️ Database Design
 
 Main entities used in the system:
 
@@ -151,9 +151,9 @@ The database is designed using **Prisma ORM with PostgreSQL**.
 
 ---
 
-# 🚀 Getting Started
+🚀 Getting Started
 
-## 1️⃣ Clone the Repository
+1️⃣ Clone the Repository
 
 ```bash
 git clone https://github.com/yourusername/mealmate.git
